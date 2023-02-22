@@ -291,6 +291,8 @@ function init_args(&$dbHandler) {
   $args = new stdClass();
   $pParams = R_PARAMS($iParams,$args);
 
+  //var_dump($_REQUEST); die();
+
   // really UGLY HACK
   $typeDomain = array('test_plan' => 'testplan','test_report' => 'testreport');
   $args->type = isset($typeDomain[$args->type]) ? $typeDomain[$args->type] : $args->type;
@@ -615,7 +617,7 @@ function buildContentForTestPlan(&$dbHandler,$itemsTree,$ctx,$decode,
     }
 
     $dummy4reference = null;
-    prepareNode($dbHandler,$tree2work,$dummy4reference,$dummy4reference,$linkedBy[$platform_id],$pnFilters,$pnOptions);
+    prepareNode($dbHandler,$tree2work,$decode,$dummy4reference,$dummy4reference,$linkedBy[$platform_id],$pnFilters,$pnOptions);
   
     $contentByPlatform[$platform_id] = $tree2work; 
   }
@@ -701,7 +703,7 @@ function buildContentForTestPlanBranch(&$dbHandler,$itemsTree,$ctx,&$docInfo,$de
     $contentByPlatform[$platform_id]['childNodes'] = array();
  
     if(!is_null($linkedBy[$platform_id])) {
-      prepareNode($dbHandler,$tInfo,$dummy4reference,$dummy4reference,
+      prepareNode($dbHandler,$tInfo,$decode,$dummy4reference,$dummy4reference,
                   $linkedBy[$platform_id],$pnFilters,$pnOptions);
     
       $contentByPlatform[$platform_id]['childNodes'] = array($tInfo);   

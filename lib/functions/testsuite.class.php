@@ -5,7 +5,7 @@
  * 
  * @filesource  testsuite.class.php
  * @package     TestLink
- * @copyright   2005-2020, TestLink community 
+ * @copyright   2005-2018, TestLink community 
  * @link        http://www.testlink.org/
  *
  *
@@ -44,9 +44,9 @@ class testsuite extends tlObjectWithAttachments
   var $export_file_types = array("XML" => "XML");
  
   // Node Types (NT)
-  var $nt2exclude = array('testplan' => 'exclude_me',
-                          'requirement_spec'=> 'exclude_me',
-                          'requirement'=> 'exclude_me');
+  var $nt2exclude=array('testplan' => 'exclude_me',
+                        'requirement_spec'=> 'exclude_me',
+                        'requirement'=> 'exclude_me');
                                                   
 
   var $nt2exclude_children=array('testcase' => 'exclude_my_children',
@@ -468,10 +468,6 @@ class testsuite extends tlObjectWithAttachments
     $gui->sqlResult = '';
     $gui->sqlAction = '';
 
-    if (!property_exists($gui, 'uploadOp')) {
-      $gui->uploadOp = null;
-    } 
-
     $p2ow = array('refreshTree' => false, 'user_feedback' => '');
     foreach($p2ow as $prop => $value) {
       if( !property_exists($gui,$prop) ) {
@@ -491,6 +487,11 @@ class testsuite extends tlObjectWithAttachments
     $my['options'] = array('show_mode' => 'readwrite');   
     $my['options'] = array_merge($my['options'], (array)$options);
 
+    $gui->modify_tc_rights = has_rights($this->db,"mgt_modify_tc");
+    if($my['options']['show_mode'] == 'readonly') {       
+      $gui->modify_tc_rights = 'no';
+    }
+      
     if($sqlResult) { 
       $gui->sqlResult = $sqlResult;
       $gui->sqlAction = $action;
@@ -501,14 +502,6 @@ class testsuite extends tlObjectWithAttachments
     if( !property_exists($gui,'tproject_id') ) {
       $gui->tproject_id = $this->getTestProjectFromTestSuite($tsuite_id,null);
     }
-
-    $gui->modify_tc_rights = 
-      has_rights($this->db,"mgt_modify_tc",$gui->tproject_id);
-      
-    if($my['options']['show_mode'] == 'readonly') {       
-      $gui->modify_tc_rights = 'no';
-    }
-
 
     $gui->assign_keywords = 0;
     if( property_exists($gui, 'user') ) {
@@ -536,9 +529,7 @@ class testsuite extends tlObjectWithAttachments
                   'output' => 'with_link_id');
     $gui->keywords_map = $this->get_keywords_map($id,$kopt);
 
-    $of = array('output' => 'html_options',
-                'add_blank' => true,
-                'tproject_id' => $gui->tproject_id);
+    $of = array('output' => 'html_options','add_blank' => true);
     $gui->freeKeywords = $this->getFreeKeywords($id,$of);
 
     $smarty->assign('gui',$gui);
@@ -784,19 +775,10 @@ class testsuite extends tlObjectWithAttachments
              see tree->get_subtree() for details.
   
   */
-  function get_subtree($id,$opt=null) {
-    $my['options'] = array('recursive' => 0, 'excludeTC' => 0);
-    $my['options'] = array_merge($my['options'],(array)$opt);
-
+  function get_subtree($id,$recursive_mode=false) {
+    $my['options'] = array('recursive' => $recursive_mode);
     $my['filters'] = array('exclude_node_types' => $this->nt2exclude,
                            'exclude_children_of' => $this->nt2exclude_children);
-
-    if( $my['options']['excludeTC'] ) {
-      $my['filters']['exclude_node_types']['testcase'] = 'exclude_me';
-    }
-
-    // var_dump($my['filters']);
-    //die();
     $subtree = $this->tree_manager->get_subtree($id,$my['filters'],$my['options']);
     return $subtree;
   }
@@ -1006,11 +988,16 @@ class testsuite extends tlObjectWithAttachments
   }
   
   
-  /**
+  /*
     function: getKeywords
               Get keyword assigned to a testsuite.
               Uses table object_keywords.
               
+              Attention:
+              probably write on obejct_keywords has not been implemented yet,
+              then right now thie method can be useless.
+               
+  
     args: id: testsuite id
           kw_id: [default = null] the optional keyword id
     
@@ -1027,12 +1014,13 @@ class testsuite extends tlObjectWithAttachments
     $sql = "/* $debugMsg */ SELECT keyword_id,keywords.keyword, notes " .
            " FROM {$this->tables['object_keywords']}, {$this->tables['keywords']} keywords " .
            " WHERE keyword_id = keywords.id AND fk_id = {$id}";
-    if (!is_null($kw_id)) {
+    if (!is_null($kw_id))
+    {
       $sql .= " AND keyword_id = {$kw_id}";
     } 
     $map_keywords = $this->db->fetchRowsIntoMap($sql,'keyword_id');
     
-    return $map_keywords;
+    return($map_keywords);
   } 
   
   
@@ -1152,126 +1140,141 @@ class testsuite extends tlObjectWithAttachments
     args :
     
     returns: 
-
+    
+    @internal revisions
   */
-  function exportTestSuiteDataToXML($container_id,$tproject_id,$optExport = array()) {
+  function exportTestSuiteDataToXML($container_id,$tproject_id,$optExport = array())
+  {
     static $keywordMgr;
     static $getLastVersionOpt = array('output' => 'minimun');
     static $tcase_mgr;
     
-    if(is_null($keywordMgr)) {
-      $keywordMgr = new tlKeyword();
-
-
+    if(is_null($keywordMgr))
+    {
+      $keywordMgr = new tlKeyword();      
     } 
     
     $xmlTC = null;
     $relCache = array();
 
     $doRecursion = isset($optExport['RECURSIVE']) ? $optExport['RECURSIVE'] : 0;
-    
-    if($doRecursion) {
+    if($doRecursion)
+    {
       $cfXML = null;
       $attachmentsXML = null;
       $kwXML = null;
       $tsuiteData = $this->get_by_id($container_id);
-      if( isset($optExport['KEYWORDS']) && $optExport['KEYWORDS']) {
+      if( isset($optExport['KEYWORDS']) && $optExport['KEYWORDS'])
+      {
         $kwMap = $this->getKeywords($container_id);
-        if ($kwMap) {
+        if ($kwMap)
+        {
           $kwXML = "<keywords>" . $keywordMgr->toXMLString($kwMap,true) . "</keywords>";
         } 
       }
-      if (isset($optExport['CFIELDS']) && $optExport['CFIELDS']) {
+      if (isset($optExport['CFIELDS']) && $optExport['CFIELDS'])
+      {
         $cfMap = (array)$this->get_linked_cfields_at_design($container_id,null,null,$tproject_id);
-        if( count($cfMap) > 0 ) {
+        if( count($cfMap) > 0 )
+        {
           $cfXML = $this->cfield_mgr->exportValueAsXML($cfMap);
         } 
       }
-	    if (isset($optExport['ATTACHMENTS']) && $optExport['ATTACHMENTS']) {
-	  	  $attachments=null;
+	  if (isset($optExport['ATTACHMENTS']) && $optExport['ATTACHMENTS'])
+      {
+		$attachments=null;
 	
-    		// get all attachments
-    		$attInfos = $this->attachmentRepository->getAttachmentInfosFor($container_id,$this->attachmentTableName,'id');
-    	  
-    		// get all attachments content and encode it in base64	  
-    		if ($attInfos) {
-    			foreach ($attInfos as $axInfo) {
-    				$aID = $axInfo["id"];
-    				$content = $this->attachmentRepository->getAttachmentContent($aID, $axInfo);
-    				
-    				if ($content != null) {
-    					$attach[$aID]["id"] = $aID;
-    					$attach[$aID]["name"] = $axInfo["file_name"];
-    					$attach[$aID]["file_type"] = $axInfo["file_type"];
-    					$attach[$aID]["title"] = $axInfo["title"];
-    					$attach[$aID]["date_added"] = $axInfo["date_added"];
-    					$attach[$aID]["content"] = base64_encode($content);
-    				}
-    			}
-    		}
+		// get all attachments
+		$attachmentInfos = $this->attachmentRepository->getAttachmentInfosFor($container_id,$this->attachmentTableName,'id');
 	  
-    		if( !is_null($attach) && count($attach) > 0 ) {
-    			$attchRootElem = "<attachments>\n{{XMLCODE}}</attachments>\n";
-    			$attchElemTemplate = "\t<attachment>\n" .
-    							   "\t\t<id><![CDATA[||ATTACHMENT_ID||]]></id>\n" .
-    							   "\t\t<name><![CDATA[||ATTACHMENT_NAME||]]></name>\n" .
-    							   "\t\t<file_type><![CDATA[||ATTACHMENT_FILE_TYPE||]]></file_type>\n" .
-    							   "\t\t<file_size><![CDATA[||ATTACHMENT_FILE_SIZE||]]></file_size>\n" .
-    							   "\t\t<title><![CDATA[||ATTACHMENT_TITLE||]]></title>\n" .
-    							   "\t\t<date_added><![CDATA[||ATTACHMENT_DATE_ADDED||]]></date_added>\n" .
-    							   "\t\t<content><![CDATA[||ATTACHMENT_CONTENT||]]></content>\n" .
-    							   "\t</attachment>\n";
+		// get all attachments content and encode it in base64	  
+		if ($attachmentInfos)
+		{
+			foreach ($attachmentInfos as $attachmentInfo)
+			{
+				$aID = $attachmentInfo["id"];
+				$content = $this->attachmentRepository->getAttachmentContent($aID, $attachmentInfo);
+				
+				if ($content != null)
+				{
+					$attachments[$aID]["id"] = $aID;
+					$attachments[$aID]["name"] = $attachmentInfo["file_name"];
+					$attachments[$aID]["file_type"] = $attachmentInfo["file_type"];
+					$attachments[$aID]["title"] = $attachmentInfo["title"];
+					$attachments[$aID]["date_added"] = $attachmentInfo["date_added"];
+					$attachments[$aID]["content"] = base64_encode($content);
+				}
+			}
+		}
+	  
+		if( !is_null($attachments) && count($attachments) > 0 )
+		{
+			$attchRootElem = "<attachments>\n{{XMLCODE}}</attachments>\n";
+			$attchElemTemplate = "\t<attachment>\n" .
+							   "\t\t<id><![CDATA[||ATTACHMENT_ID||]]></id>\n" .
+							   "\t\t<name><![CDATA[||ATTACHMENT_NAME||]]></name>\n" .
+							   "\t\t<file_type><![CDATA[||ATTACHMENT_FILE_TYPE||]]></file_type>\n" .
+							   "\t\t<file_size><![CDATA[||ATTACHMENT_FILE_SIZE||]]></file_size>\n" .
+							   "\t\t<title><![CDATA[||ATTACHMENT_TITLE||]]></title>\n" .
+							   "\t\t<date_added><![CDATA[||ATTACHMENT_DATE_ADDED||]]></date_added>\n" .
+							   "\t\t<content><![CDATA[||ATTACHMENT_CONTENT||]]></content>\n" .
+							   "\t</attachment>\n";
 
-    			$attchDecode = array ("||ATTACHMENT_ID||" => "id", "||ATTACHMENT_NAME||" => "name",
-    								"||ATTACHMENT_FILE_TYPE||" => "file_type",
-    								"||ATTACHMENT_FILE_SIZE||" => "file_size", 
-    								"||ATTACHMENT_TITLE||" => "title",
-    								"||ATTACHMENT_DATE_ADDED||" => "date_added", 
-    								"||ATTACHMENT_CONTENT||" => "content");
-    			$attachXML = exportDataToXML($attach,$attchRootElem,$attchElemTemplate,$attchDecode,true);
-    		} 
+			$attchDecode = array ("||ATTACHMENT_ID||" => "id", "||ATTACHMENT_NAME||" => "name",
+								"||ATTACHMENT_FILE_TYPE||" => "file_type",
+								"||ATTACHMENT_FILE_SIZE||" => "file_size", 
+								"||ATTACHMENT_TITLE||" => "title",
+								"||ATTACHMENT_DATE_ADDED||" => "date_added", 
+								"||ATTACHMENT_CONTENT||" => "content");
+			$attachmentsXML = exportDataToXML($attachments,$attchRootElem,$attchElemTemplate,$attchDecode,true);
+		} 
       }
-
       $xmlTC = '<testsuite id="' . $tsuiteData['id'] . '" ' .
                'name="' . htmlspecialchars($tsuiteData['name']). '" >' .
                "\n<node_order><![CDATA[{$tsuiteData['node_order']}]]></node_order>\n" .
                "<details><![CDATA[{$tsuiteData['details']}]]></details> \n{$kwXML}{$cfXML}{$attachmentsXML}";
-    
-    } else {
+    }
+    else
+    {
       $xmlTC = "<testcases>";
     }
     
-    $topt = array('recursive' => self::USE_RECURSIVE_MODE);
-    if( isset($optExport['skeleton']) && $optExport['skeleton'] ) {
-      $topt['excludeTC'] = true;
-    }
-    $test_spec = $this->get_subtree($container_id,$topt);
+    $test_spec = $this->get_subtree($container_id,self::USE_RECURSIVE_MODE);
     
     $childNodes = isset($test_spec['childNodes']) ? $test_spec['childNodes'] : null ;
     $tcase_mgr=null;
     $relXmlData = '';
-    if( !is_null($childNodes) ) {
+    if( !is_null($childNodes) )
+    {
       $loop_qty=sizeof($childNodes); 
-      for($idx = 0;$idx < $loop_qty;$idx++) {
+      for($idx = 0;$idx < $loop_qty;$idx++)
+      {
         $cNode = $childNodes[$idx];
         $nTable = $cNode['node_table'];
-        if ($doRecursion && $nTable == 'testsuites') {
+        if ($doRecursion && $nTable == 'testsuites')
+        {
           $xmlTC .= $this->exportTestSuiteDataToXML($cNode['id'],$tproject_id,$optExport);
-        } else if ($nTable == 'testcases') {
-          if( is_null($tcase_mgr) ) {
+        }
+        else if ($nTable == 'testcases')
+        {
+          if( is_null($tcase_mgr) )
+          {
             $tcase_mgr = new testcase($this->db);
           }
-          $xmlTC .= $tcase_mgr->exportTestCaseDataToXML($cNode['id'],
-            testcase::LATEST_VERSION,
-            $tproject_id,true,$optExport);
+          $xmlTC .= $tcase_mgr->exportTestCaseDataToXML($cNode['id'],testcase::LATEST_VERSION,
+                                                        $tproject_id,true,$optExport);
+
 
           // 20140816
           // Collect and do cache of all test case relations that exists inside this test suite.
           $relSet = $tcase_mgr->getRelations($cNode['id']);
-          if($relSet['num_relations'] >0) {
-            foreach($relSet['relations'] as $key => $rel) {
+          if($relSet['num_relations'] >0)
+          {
+            foreach($relSet['relations'] as $key => $rel) 
+            {
               // If we have already found this relation, skip it.
-              if ( !in_array($rel['id'], $relCache) ) {
+              if ( !in_array($rel['id'], $relCache) ) 
+              {
                 $relXmlData .= $tcase_mgr->exportRelationToXML($rel,$relSet['item']);
                 $relCache[] = $rel['id'];
               }  
@@ -1913,26 +1916,17 @@ class testsuite extends tlObjectWithAttachments
    *
    *
    */
-  function getFreeKeywords($tsuiteID, $opt = null) {
+  function getFreeKeywords($tsuiteID,$opt = null) {
     $my['opt'] = array('accessKey' => 'keyword_id', 'fields' => null, 
                        'orderBy' => null, 'tproject_id' => null,
                        'output' => 'std', 'add_blank' => false);
 
     $my['opt'] = array_merge($my['opt'],(array)$opt);
 
-    // CRITIC
-    $tproject_id = $my['opt']['tproject_id'];
-    if( null == $tproject_id ) {
-      $root = $this->getTestProjectFromTestSuite($tsuiteID,null);
-    }
-    $tproject_id = intval($tproject_id);
-
-
     $safeID = intval($tsuiteID);
     $sql = " SELECT KW.id AS keyword_id, KW.keyword
              FROM {$this->tables['keywords']} KW
-             WHERE KW.testproject_id = {$tproject_id} 
-             AND KW.id NOT IN 
+             WHERE KW.id NOT IN 
              (
                SELECT TSKW.keyword_id 
                FROM {$this->tables['object_keywords']} TSKW
@@ -2055,31 +2049,6 @@ class testsuite extends tlObjectWithAttachments
 
     return $kw;
   } 
-
-  /**
-   *
-   *
-   */
-  function keywordIsLinked($id,$kw) {
-
-    $debugMsg = 'Class:' . __CLASS__ . ' - Method: ' . __FUNCTION__;
-
-    $idSet = $id;
-    $safeKW = "'" . $this->db->prepare_string(trim($kw)) . "'";
-    $sql = " /* $debugMsg */ 
-             SELECT fk_id AS tsuite_id, OKW.keyword_id 
-             FROM {$this->tables['object_keywords']} OKW
-             JOIN {$this->tables['keywords']} KW
-             ON KW.id = OKW.keyword_id
-             WHERE fk_id IN ( {$idSet} ) 
-             AND fk_table = 'nodes_hierarchy' 
-             AND KW.keyword = {$safeKW}";
-    $rs = (array)$this->db->get_recordset($sql);
-
-    return (count($rs) == 1);
-  } 
-
-
 
 
 } // end class

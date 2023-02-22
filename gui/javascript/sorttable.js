@@ -208,13 +208,10 @@ sorttable = {
     hasInputs = (typeof node.getElementsByTagName == 'function') &&
                  node.getElementsByTagName('input').length;
     
-    if( typeof node.getAttribute == 'function' ) {
-      if (node.getAttribute("sorttable_customkey") != null) {
-        return node.getAttribute("sorttable_customkey");
-      }      
+    if (node.getAttribute("sorttable_customkey") != null) {
+      return node.getAttribute("sorttable_customkey");
     }
-
-    if (typeof node.textContent != 'undefined' && !hasInputs) {
+    else if (typeof node.textContent != 'undefined' && !hasInputs) {
       return node.textContent.replace(/^\s+|\s+$/g, '');
     }
     else if (typeof node.innerText != 'undefined' && !hasInputs) {

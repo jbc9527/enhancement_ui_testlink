@@ -20,6 +20,9 @@
  * other properties can be present depending on ITS.
  * =============================================================================
  *
+ * @internal revisions
+ * @since 1.9.14
+ *
  *
 **/
 require_once(TL_ABS_PATH . "/lib/functions/database.class.php");
@@ -97,12 +100,14 @@ abstract class issueTrackerInterface
    *
    * 
    **/
-  function setCfg($xmlString) {
+  function setCfg($xmlString)
+  {
     $msg = null;
     $signature = 'Source:' . __METHOD__;
 
     // check for empty string
-    if(strlen(trim($xmlString)) == 0) {
+    if(strlen(trim($xmlString)) == 0)
+    {
       // Bye,Bye
       $msg = " - Issue tracker:$this->name - XML Configuration seems to be empty - please check";
       tLog(__METHOD__ . $msg, 'ERROR');  
@@ -111,9 +116,11 @@ abstract class issueTrackerInterface
       
     $this->xmlCfg = "<?xml version='1.0'?> " . $xmlString;
     libxml_use_internal_errors(true);
-    try {
+    try 
+    {
       $this->cfg = simplexml_load_string($this->xmlCfg);
-      if (!$this->cfg) {
+      if (!$this->cfg) 
+      {
         $msg = $signature . " - Failure loading XML STRING\n";
         foreach(libxml_get_errors() as $error) 
         {
@@ -374,7 +381,7 @@ abstract class issueTrackerInterface
       }
     }
 
-    if ($my['opt']['addReporter']) {
+    if($my['opt']['addReporter']) {
       if( property_exists($issue, 'reportedBy') ) {
         $link .= "";
         $who = trim((string)$issue->reportedBy);
@@ -412,8 +419,8 @@ abstract class issueTrackerInterface
 
     $link .= "</a>";
 
-    if ($my['opt']['colorByStatus'] 
-        && property_exists($issue,'statusColor') ) {
+    if($my['opt']['colorByStatus'] && property_exists($issue,'statusColor') )
+    {
       $title = lang_get('access_to_bts');  
       $link = "<div  title=\"{$title}\" style=\"display: inline; background: $issue->statusColor;\">$link</div>";
     }
@@ -423,10 +430,12 @@ abstract class issueTrackerInterface
     $ret->isResolved = $issue->isResolved;
     $ret->op = true;
 
-    if (isset($my['opt']['raw']) 
-        && !is_null(isset($my['opt']['raw'])) ) {
-      foreach ($my['opt']['raw'] as $attr) {
-      	if (property_exists($issue, $attr)) {
+    if( isset($my['opt']['raw']) && !is_null(isset($my['opt']['raw'])) )
+    {
+      foreach($my['opt']['raw'] as $attr)
+      {
+      	if(property_exists($issue, $attr))
+      	{
           $ret->$attr = $issue->$attr;
       	}
       }  
@@ -440,7 +449,8 @@ abstract class issueTrackerInterface
    * @return string returns a complete URL
    *
    **/
-  function getEnterBugURL() {
+  function getEnterBugURL()
+  {
     return $this->cfg->uricreate;
   }
 
@@ -454,7 +464,8 @@ abstract class issueTrackerInterface
    * 
    * @return string 
    **/
-  function buildViewBugURL($issueID) {
+  function buildViewBugURL($issueID)
+  {
     return $this->cfg->uriview . urlencode($issueID);
   }
 
@@ -526,13 +537,17 @@ abstract class issueTrackerInterface
    **/
   public function setResolvedStatusCfg()
   {
-    if (property_exists($this->cfg,'resolvedstatus')) {
+    if( property_exists($this->cfg,'resolvedstatus') )
+    {
       $statusCfg = (array)$this->cfg->resolvedstatus;
-    } else {
+    }
+    else
+    {
       $statusCfg['status'] = $this->defaultResolvedStatus;
     }
     $this->resolvedStatus = new stdClass();
-    foreach ($statusCfg['status'] as $cfx) {
+    foreach($statusCfg['status'] as $cfx)
+    {
       $e = (array)$cfx;
       $this->resolvedStatus->byCode[$e['code']] = $e['verbose'];
     }

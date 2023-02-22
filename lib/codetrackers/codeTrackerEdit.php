@@ -97,7 +97,8 @@ function renderGui(&$dbHandler,&$argsObj,$guiObj,$opObj,$templateCfg)
 /**
  * 
  */
-function initScript(&$dbHandler) {
+function initScript(&$dbHandler)
+{
   $mgr = new codeTrackerCommands($dbHandler);
   $args = init_args(array('doAction' => $mgr->getGuiOpWhiteList()));
   $gui = initializeGui($dbHandler,$args,$mgr);
@@ -107,7 +108,8 @@ function initScript(&$dbHandler) {
 /**
  * @return object returns the arguments for the page
  */
-function init_args($whiteList) {
+function init_args($whiteList)
+{
   $_REQUEST = strings_stripSlashes($_REQUEST);
   $args = new stdClass();
 
@@ -117,12 +119,17 @@ function init_args($whiteList) {
 		   "cfg" => array(tlInputParameter::STRING_N,0,2000),
 		   "type" => array(tlInputParameter::INT_N));
 
+  //new dBug($_REQUEST);
+		
   R_PARAMS($iParams,$args);
 
   // sanitize via whitelist
-  foreach($whiteList as $inputKey => $allowedValues) {
-    if( property_exists($args,$inputKey) ) {
-      if( !isset($allowedValues[$args->$inputKey]) ) {
+  foreach($whiteLists as $inputKey => $allowedValues)
+  {
+    if( property_exists($args,$inputKey) )
+    {
+      if( !isset($allowedValues[$args->$inputKey]) )
+      {
         $msg = "Input parameter $inputKey - white list validation failure - " .
                "Value:" . $args->$inputKey . " - " .
                "File: " . basename(__FILE__) . " - Function: " . __FUNCTION__ ; 

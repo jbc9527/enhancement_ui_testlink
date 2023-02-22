@@ -7,8 +7,11 @@
  * 
  * Examples of using tlInputParameter related functions
  *
+ *	@interal revisions:
+ *  20100109 - franciscom - fixed errors on documentation          
  *
  * <code>
+ *  
  * 
  * 	$params = array( 
  *

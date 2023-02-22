@@ -7,7 +7,7 @@
  *
  * @filesource  tcImport.php
  * @package     TestLink
- * @copyright   2007-2019, TestLink community 
+ * @copyright   2007-2018, TestLink community 
  * @link        http://testlink.sourceforge.net/ 
  * 
  */
@@ -88,7 +88,6 @@ if($args->useRecursion) {
                          'externalID' => lang_get('same_externalID'));
 } else {
   $obj_mgr = new testcase($db);
-  $obj_mgr->setTestProject($args->tproject_id);
 }
 
 $gui->actionOptions = 
@@ -202,8 +201,6 @@ function saveImportedTCData(&$db,$tcData,$tproject_id,$container_id,
     $fieldSizeCfg = config_get('field_size');
 
     $tcase_mgr = new testcase($db);
-    $tcase_mgr->setTestProject($tproject_id);
-
     $tproject_mgr = new testproject($db);
     $req_spec_mgr = new requirement_spec_mgr($db);
     $req_mgr = new requirement_mgr($db);
@@ -270,8 +267,6 @@ function saveImportedTCData(&$db,$tcData,$tproject_id,$container_id,
     $name = $tc['name'];
     $summary = $tc['summary'];
     $steps = $tc['steps'];
-    $internalid = $tc['internalid'];
-    $externalid = $tc['externalid'];
 
     $doCreate = true;
     if( $duplicatedLogic['actionOnHit'] == 'update_last_version' || 
@@ -822,12 +817,13 @@ function processAttachments( &$dbHandler, $tcaseName, $xmlInternalID, $fk_Id, $t
  * 
  *
  */
-function importTestCasesFromSimpleXML(&$db,&$simpleXMLObj,$parentID,$tproject_id,$userID,$kwMap,$duplicateLogic) {
+function importTestCasesFromSimpleXML(&$db,&$simpleXMLObj,$parentID,$tproject_id,$userID,$kwMap,$duplicateLogic)
+{
   $resultMap = null;
   $xmlTCs = $simpleXMLObj->xpath('//testcase');
   $tcData = getTestCaseSetFromSimpleXMLObj($xmlTCs);
-
-  if ($tcData) {
+  if ($tcData)
+  {
     $resultMap = saveImportedTCData($db,$tcData,$tproject_id,$parentID,$userID,$kwMap,$duplicateLogic);
   }  
   return $resultMap;
@@ -1081,21 +1077,17 @@ function importTestSuitesFromSimpleXML(&$dbHandler,&$xml,$parentID,$tproject_id,
     $childrenNodes = $xml->children();  
     $loop2do = sizeof($childrenNodes);
     
-    for($idx = 0; $idx < $loop2do; $idx++) {
-
+    for($idx = 0; $idx < $loop2do; $idx++)
+    {
       $target = $childrenNodes[$idx];
-      switch($target->getName()) {
+      switch($target->getName())
+      {
         case 'testcase':
           // getTestCaseSetFromSimpleXMLObj() first argument must be an array
           $tcData = getTestCaseSetFromSimpleXMLObj(array($target));
-          if( trim($tcData[0]['name']) == '' ) {
-            $xx = array(lang_get('testcase_has_no_name'),lang_get('testcase_has_no_name'));
-            $resultMap = array_merge($resultMap,array($xx));
-          } else {
-            $resultMap = array_merge($resultMap,
-                         saveImportedTCData($dbHandler,$tcData,$tproject_id,
-                                            $tsuiteID,$userID,$kwMap,$duplicateLogic));
-          }
+          $resultMap = array_merge($resultMap,
+                       saveImportedTCData($dbHandler,$tcData,$tproject_id,
+                                          $tsuiteID,$userID,$kwMap,$duplicateLogic));
           unset($tcData);
         break;
 
@@ -1190,9 +1182,10 @@ function processTestSuiteCF(&$tsuiteMgr,$xmlObj,&$cfDefinition,&$cfValues,$tsuit
 {
 
   static $messages;
-  static $missingCfMsg;
+    static $missingCfMsg;
 
-  if(is_null($messages)) {
+  if(is_null($messages))
+  {
       $messages = array();
       $messages['cf_warning'] = lang_get('no_cf_defined_can_not_import');
         $messages['start_warning'] = lang_get('start_warning');

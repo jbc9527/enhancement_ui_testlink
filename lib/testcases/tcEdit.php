@@ -8,7 +8,7 @@
  * @filesource  tcEdit.php
  * @package     TestLink
  * @author      TestLink community
- * @copyright   2007-2020, TestLink community 
+ * @copyright   2007-2018, TestLink community 
  * @link        http://www.testlink.org/
  *
  *
@@ -47,7 +47,6 @@ $name_ok = 1;
 $doRender = false;
 $pfn = $args->doAction;
 
-
 $testCaseEditorKeys = null;
 switch($args->doAction) {
   case "create":  
@@ -69,16 +68,16 @@ switch($args->doAction) {
   case "doReorderSteps":
   case "doInsertStep":
   case "doResequenceSteps":
-  case "doStepOperationExit":
     $testCaseEditorKeys = array('steps' => 'steps', 'expected_results' => 'expected_results');
   break;
 
 }
 
-switch($args->doAction) {
+
+switch($args->doAction)
+{
   case "doUpdate":
   case "doAdd2testplan":
-  case 'updateTPlanLinkToTCV':
     $op = $commandMgr->$pfn($args,$_REQUEST);
   break;
 
@@ -112,21 +111,12 @@ switch($args->doAction) {
   case "addKeyword":
   case "freeze":
   case "unfreeze":
-  case "doStepOperationExit":
-  case "removePlatform":
-  case "addPlatform":
-
-/*
-var_dump($_REQUEST);
-die();
-    die();
-*/
     $op = $commandMgr->$pfn($args,$_REQUEST);
     $doRender = true;
   break;
 
   case "fileUpload":
-    $args->uploadOp = fileUploadManagement($db,$args->tcversion_id,$args->fileTitle,$tcase_mgr->getAttachmentTableName());
+    fileUploadManagement($db,$args->tcversion_id,$args->fileTitle,$tcase_mgr->getAttachmentTableName());
     $commandMgr->show($args,$_REQUEST,array('status_ok' => true),false);
   break;
 
@@ -191,7 +181,9 @@ if($args->delete_tc_version) {
   $smarty->assign('gui',$gui);
   $templateCfg = templateConfiguration('tcDelete');
   $smarty->display($templateCfg->template_dir . $templateCfg->default_template);
-} else if($args->move_copy_tc) {
+}
+else if($args->move_copy_tc)
+{
   // need to get the testproject for the test case
   $tproject_id = $tcase_mgr->get_testproject($args->tcase_id);
   $the_tc_node = $tree_mgr->get_node_hierarchy_info($args->tcase_id);
@@ -203,11 +195,12 @@ if($args->delete_tc_version) {
   
   $container_qty = count($the_xx);
   $gui->move_enabled = 1;
-  if ($container_qty == 1) {
+  if($container_qty == 1)
+  {
     // move operation is nonsense
     $gui->move_enabled = 0;
   }
-
+  
   $gui->top_checked = 'checked=checked';
   $gui->bottom_checked = '';
   
@@ -231,19 +224,17 @@ else if($args->do_move)
 
   $gui->refreshTree = $args->refreshTree;
   $tsuite_mgr->show($smarty,$gui,$templateCfg->template_dir,$args->old_container_id);
-} else if($args->do_copy || $args->do_copy_ghost_zone) {
+}
+else if($args->do_copy || $args->do_copy_ghost_zone)
+{
   $args->stepAsGhost = $args->do_copy_ghost_zone;
   $user_feedback='';
   $msg = '';
   $action_result = 'copied';
-  $options = array('check_duplicate_name' => 
-                      config_get('check_names_for_duplicates'),
-                   'action_on_duplicate_name' => 
-                      config_get('action_on_duplicate_name'),
-                   'copy_also' => $args->copy, 
-                   'stepAsGhost' => $args->do_copy_ghost_zone,
-                   'use_this_name' => $args->name,
-                   'copyOnlyLatest' => $args->copyOnlyLatestVersion);
+  $options = array('check_duplicate_name' => config_get('check_names_for_duplicates'),
+                   'action_on_duplicate_name' => config_get('action_on_duplicate_name'),
+                   'copy_also' => $args->copy, 'stepAsGhost' => $args->do_copy_ghost_zone,
+                   'use_this_name' => $args->name);
   
   $result = $tcase_mgr->copy_to($args->tcase_id,$args->new_container_id,$args->user_id,$options);
   $msg = $result['msg'];
@@ -282,11 +273,46 @@ else if($args->do_move)
 
 }
 else if($args->do_create_new_version) {
-  createNewVersion($smarty,$args,$gui,$tcase_mgr,$args->tcversion_id);
-}
-else if($args->do_create_new_version_from_latest) { 
-  $ltcv = $tcase_mgr->getLatestVersionID($args->tcase_id);
-  createNewVersion($smarty,$args,$gui,$tcase_mgr,$ltcv);
+  $user_feedback = '';
+  $show_newTC_form = 0;
+  $action_result = "do_update";
+  $msg = lang_get('error_tc_add');
+  $op = $tcase_mgr->create_new_version($args->tcase_id,$args->user_id,$args->tcversion_id);
+
+
+  $candidate = $args->tcversion_id;
+  if ($op['msg'] == "ok") {
+
+    $candidate = $op['id'];
+    $user_feedback = sprintf(lang_get('tc_new_version'),$op['version']);
+    $msg = 'ok';
+  
+    $tcCfg = config_get('testcase_cfg');
+    
+    $isOpen = !$tcCfg->freezeTCVersionOnNewTCVersion;
+    $tcase_mgr->setIsOpen($args->tcase_id,$args->tcversion_id,$isOpen);
+  } 
+  $identity = new stdClass();
+  $identity->id = $args->tcase_id;
+  $identity->tproject_id = $args->tproject_id;
+  $identity->version_id = !is_null($args->show_mode) ? $candidate : testcase::ALL_VERSIONS;
+
+
+
+  $gui->viewerArgs['action'] = $action_result;
+  $gui->viewerArgs['refreshTree'] = DONT_REFRESH;
+  $gui->viewerArgs['msg_result'] = $msg;
+  $gui->viewerArgs['user_feedback'] = $user_feedback;
+  $gui->path_info = null;
+  
+  // used to implement go back ??
+  $gui->loadOnCancelURL = $_SESSION['basehref'] . 
+                          '/lib/testcases/archiveData.php?edit=testcase&id=' . $args->tcase_id .
+                          "&show_mode={$args->show_mode}";
+
+ 
+
+  $tcase_mgr->show($smarty,$gui,$identity,$gui->grants,array('getAttachments' => true));
 
 }
 else if($args->do_activate_this || $args->do_deactivate_this) {
@@ -332,7 +358,6 @@ function init_args(&$cfgObj,$otName,&$tcaseMgr) {
     $nu = key($tcaseMgr->get_last_active_version($args->tcase_id));
   }
 
-
   $args->name = isset($_REQUEST['testcase_name']) ? $_REQUEST['testcase_name'] : null;
 
   // Normally Rich Web Editors  
@@ -365,9 +390,8 @@ function init_args(&$cfgObj,$otName,&$tcaseMgr) {
   }
 
    
-  $key2loop = array('move_copy_tc','delete_tc_version','do_move','do_copy',
-                    'do_copy_ghost_zone','do_delete_tc_version',
-                    'do_create_new_version','do_create_new_version_from_latest');
+  $key2loop = array('move_copy_tc','delete_tc_version','do_move','do_copy','do_copy_ghost_zone',
+                    'do_create_new_version','do_delete_tc_version');
   foreach($key2loop as $key) {
     $args->$key = isset($_REQUEST[$key]) ? 1 : 0;
   }
@@ -416,11 +440,9 @@ function init_args(&$cfgObj,$otName,&$tcaseMgr) {
 
 
   // Specialized webEditorConfiguration
-  $action2check = array("editStep" => true,"createStep" => true, 
-                        "doCreateStep" => true,
+  $action2check = array("editStep" => true,"createStep" => true, "doCreateStep" => true,
                         "doUpdateStep" => true, "doInsertStep" => true, 
-                        "doCopyStep" => true,
-                        "doUpdateStepAndInsert" => true);
+                        "doCopyStep" => true,"doUpdateStepAndInsert" => true);
   if( isset($action2check[$args->doAction]) ) {
     $cfgObj->webEditorCfg = getWebEditorCfg('steps_design');  
   }   
@@ -463,8 +485,6 @@ function init_args(&$cfgObj,$otName,&$tcaseMgr) {
 
   $args->tckw_link_id = isset($_GET['tckw_link_id']) ? intval($_GET['tckw_link_id']) : 0;
 
- $args->tcplat_link_id = isset($_GET['tcplat_link_id']) ? intval($_GET['tcplat_link_id']) : 0;
-
 
   $args->tplan_id = isset($_REQUEST['tplan_id']) ? intval($_REQUEST['tplan_id']) : 0;
   $args->platform_id = isset($_REQUEST['platform_id']) ? intval($_REQUEST['platform_id']) : 0;
@@ -473,15 +493,8 @@ function init_args(&$cfgObj,$otName,&$tcaseMgr) {
   $cbk = 'changeExecTypeOnSteps';
   $args->applyExecTypeChangeToAllSteps = isset($_REQUEST[$cbk]);
 
-  $k2c = array('free_keywords','free_platforms');
-  foreach ($k2c as $kv) {
-    $args->$kv = isset($_REQUEST[$kv]) ? $_REQUEST[$kv] : null;
-  }
-
-  $args->copyOnlyLatestVersion = 
-    isset($_REQUEST['copy_latest_version']) ? 1 : 0;
-
-  $tcaseMgr->setTestProject($args->tproject_id);
+  $k2c = 'free_keywords';
+  $args->free_keywords = isset($_REQUEST[$k2c]) ? $_REQUEST[$k2c] : null;
 
   return $args;
 }
@@ -597,8 +610,6 @@ function getGrants(&$dbHandler) {
  */
 function initializeGui(&$dbHandler,&$argsObj,$cfgObj,&$tcaseMgr,&$tprojMgr) {
   $guiObj = new stdClass();
-  $guiObj->uploadOp = null;
-  $guiObj->tplan_id = $argsObj->tplan_id;
   $guiObj->tproject_id = $argsObj->tproject_id;
   $guiObj->editorType = $cfgObj->webEditorCfg['type'];
   $guiObj->grants = getGrants($dbHandler);
@@ -684,8 +695,7 @@ function renderGui(&$argsObj,$guiObj,$opObj,$templateCfg,$cfgObj,$editorKeys) {
   $nak = array('doDelete','doDeleteStep','doReorderSteps','doResequenceSteps',
                'setImportance','setStatus','setExecutionType', 
                'setEstimatedExecDuration','doAddRelation','doDeleteRelation',
-               'removeKeyword','freeze','unfreeze','addKeyword',
-               'removePlatform','addPlatform');
+               'removeKeyword','freeze','unfreeze','addKeyword');
 
   foreach($nak as $ak) {
     $actionOperation[$ak] = '';
@@ -698,12 +708,14 @@ function renderGui(&$argsObj,$guiObj,$opObj,$templateCfg,$cfgObj,$editorKeys) {
 
   $oWebEditor = createWebEditors($argsObj->basehref,$cfgObj->webEditorCfg,$editorKeys); 
 
-  foreach ($oWebEditor->cfg as $key => $value) {
+  foreach ($oWebEditor->cfg as $key => $value)
+  {
     $of = &$oWebEditor->editor[$key];
     $rows = $oWebEditor->cfg[$key]['rows'];
     $cols = $oWebEditor->cfg[$key]['cols'];
     
-    switch($argsObj->doAction) {
+    switch($argsObj->doAction)
+    {
       case "edit":
       case "delete":
       case "editStep":
@@ -733,124 +745,90 @@ function renderGui(&$argsObj,$guiObj,$opObj,$templateCfg,$cfgObj,$editorKeys) {
     }
     $guiObj->operation = $actionOperation[$argsObj->doAction];
   
-    if($initWebEditorFromTemplate) {
+    if($initWebEditorFromTemplate)
+    {
       $of->Value = getItemTemplateContents('testcase_template', $of->InstanceName, '');  
-    } else if( $cleanUpWebEditor ) {
+    }
+    else if( $cleanUpWebEditor )
+    {
       $of->Value = '';
     }
     $smartyObj->assign($key, $of->CreateHTML($rows,$cols));
   }
       
-  switch($argsObj->doAction) {
+  switch($argsObj->doAction) 
+  {
     case "doDelete":
       $guiObj->refreshTree = $argsObj->refreshTree;
     break;
   }
 
-  switch($argsObj->doAction) {
-    case "edit":
-    case "create":
-    case "delete":
-    case "createStep":
-    case "editStep":
-    case "doCreate":
-    case "doDelete":
-    case "doCreateStep":
-    case "doUpdateStep":
-    case "doDeleteStep":
-    case "doReorderSteps":
-    case "doCopyStep":
-    case "doInsertStep":
-    case "doResequenceSteps":
-    case "setImportance":
-    case "setStatus":
-    case "setExecutionType":
-    case "setEstimatedExecDuration":
-    case "doAddRelation":
-    case "doDeleteRelation":
-    case "doUpdateStepAndInsert":
-    case "removeKeyword":  
-    case "addKeyword":  
-    case "freeze":        
-    case "unfreeze":        
-    case "removePlatform":  
-    case "addPlatform":  
-      $renderType = 'template';
-      
-      // Document this !!!!
-      $key2loop = get_object_vars($opObj);
-      foreach($key2loop as $key => $value) {
-       $guiObj->$key = $value;
-      }
-      $guiObj->operation = $actionOperation[$argsObj->doAction];
-        
-      $tplDir = (!isset($opObj->template_dir)  || is_null($opObj->template_dir)) ? $templateCfg->template_dir : $opObj->template_dir;
-      $tpl = is_null($opObj->template) ? $templateCfg->default_template : $opObj->template;
+  switch($argsObj->doAction)
+  {
+        case "edit":
+        case "create":
+        case "delete":
+        case "createStep":
+        case "editStep":
+        case "doCreate":
+        case "doDelete":
+        case "doCreateStep":
+        case "doUpdateStep":
+        case "doDeleteStep":
+        case "doReorderSteps":
+        case "doCopyStep":
+        case "doInsertStep":
+        case "doResequenceSteps":
+        case "setImportance":
+        case "setStatus":
+        case "setExecutionType":
+        case "setEstimatedExecDuration":
+        case "doAddRelation":
+        case "doDeleteRelation":
+        case "doUpdateStepAndInsert":
+        case "removeKeyword":  
+        case "addKeyword":  
+        case "freeze":        
+        case "unfreeze":        
+            $renderType = 'template';
+            
+            // Document this !!!!
+            $key2loop = get_object_vars($opObj);
+            foreach($key2loop as $key => $value)
+            {
+             $guiObj->$key = $value;
+            }
+            $guiObj->operation = $actionOperation[$argsObj->doAction];
+            
+            $tplDir = (!isset($opObj->template_dir)  || is_null($opObj->template_dir)) ? $templateCfg->template_dir : $opObj->template_dir;
+            $tpl = is_null($opObj->template) ? $templateCfg->default_template : $opObj->template;
 
-      $pos = strpos($tpl, '.php');
-      if($pos === false) {
-        $tpl = $tplDir . $tpl;      
-      } else {
-        $renderType = 'redirect';  
-      } 
-    break;
-  }
+            $pos = strpos($tpl, '.php');
+            if($pos === false)
+            {
+              $tpl = $tplDir . $tpl;      
+            }
+            else
+            {
+              $renderType = 'redirect';  
+            } 
+        break;
+    }
 
-  switch($renderType) {
-    case 'template':
-      $smartyObj->assign('gui',$guiObj);
-      $smartyObj->display($tpl);
-    break;  
+    switch($renderType)
+    {
+      case 'template':
+        $smartyObj->assign('gui',$guiObj);
+        $smartyObj->display($tpl);
+      break;  
+ 
+      case 'redirect':
+        header("Location: {$tpl}");
+        exit();
+      break;
 
-    case 'redirect':
-      header("Location: {$tpl}");
-      exit();
-    break;
+      default:
+      break;
+    }
 
-    default:
-    break;
-  }
-
-}
-
-
-/**
- *
- */
-function createNewVersion(&$tplEng,&$argsObj,&$guiObj,&$tcaseMgr,$sourceTCVID) {
-  $user_feedback = '';
-  $msg = lang_get('error_tc_add');
-
-  $op = $tcaseMgr->create_new_version($argsObj->tcase_id,
-          $argsObj->user_id,$sourceTCVID);
-
-  $candidate = $sourceTCVID;
-  if ($op['msg'] == "ok") {
-    $candidate = $op['id'];
-    $user_feedback = sprintf(lang_get('tc_new_version'),$op['version']);
-    $msg = 'ok';
-    $tcCfg = config_get('testcase_cfg');
-    $isOpen = !$tcCfg->freezeTCVersionOnNewTCVersion;
-    $tcaseMgr->setIsOpen($argsObj->tcase_id,$sourceTCVID,$isOpen);
-  } 
-  $identity = new stdClass();
-  $identity->id = $argsObj->tcase_id;
-  $identity->tproject_id = $argsObj->tproject_id;
-  $identity->version_id = !is_null($argsObj->show_mode) ? $candidate : testcase::ALL_VERSIONS;
-
-  $guiObj->viewerArgs['action'] = "do_update";
-  $guiObj->viewerArgs['refreshTree'] = DONT_REFRESH;
-  $guiObj->viewerArgs['msg_result'] = $msg;
-  $guiObj->viewerArgs['user_feedback'] = $user_feedback;
-  $guiObj->path_info = null;
-  
-  // used to implement go back ??
-  $guiObj->loadOnCancelURL = $_SESSION['basehref'] . 
-    '/lib/testcases/archiveData.php?edit=testcase&id=' . $argsObj->tcase_id .
-    "&show_mode={$argsObj->show_mode}";
-
-
-  $tcaseMgr->show($tplEng,$guiObj,$identity,$guiObj->grants,
-                  array('getAttachments' => true));
-  exit();
 }

@@ -1,10 +1,4 @@
-# IMPORTANT NOTICE
-1.9.20 will be the last version of the 1.9.x family.  
-Next TestLink version will 2.x with a new UX based on the Dashio - Bootstrap Admin Template (https://templatemag.com/dashio-bootstrap-admin-template/)
-
-
-
-# TestLink 1.9.20 Raijin - Read me
+# TestLink 1.9.19 Metonic cycle - Read me
 
 ## Contents
  1. [Introduction](#1-introduction)
@@ -29,12 +23,12 @@ Next TestLink version will 2.x with a new UX based on the Dashio - Bootstrap Adm
 ## 1. Introduction
 
 TestLink is a web based test management and test execution system.
-It enables quality assurance teams to create and manage their test
-cases as well as to organize them into test plans. These test plans
-allow team members to execute test cases and track test results
+It enables quality assurance teams to create and manage their test 
+cases as well as to organize them into test plans. These test plans 
+allow team members to execute test cases and track test results 
 dynamically.
 
-TestLink is a GPL licensed open source project. All of the source code
+TestLink is a GPL licensed open source project. All of the source code 
 behind TestLink is freely available for download via [SourceForge][sou]
 or [GitHub][hub]. If you are interested in contributing to the TestLink
 effort feel free to contact us. There is no hidden fee - 100% free for
@@ -71,7 +65,7 @@ has been done and what still needs to be done.
 
 ## 2. Release notes / CRITICAL Configuration Notes
 
-This release contains bugfixes and enhancement for 1.9.19
+This release contains bugfixes and enhancement for 1.9.18
 See CHANGELOG file for detailed list of issues fixed.
 
 Give a look also to:
@@ -158,30 +152,23 @@ here:
 
 Server environment should consist of:
 - web-server: Apache 2.x
-- PHP > 5.5 It will be better if you use PHP 7.2.x 
-- PHP IMPORTANTE NOTICE: next TestLink Version will require minimum PHP 7.3.x
--       
-- DBMS
-  - MySQL 5.7.x
-    - The `log_bin_trust_function_creators` option must be enabled.
-  - MariaDB 10.1.x
-    - The `log_bin_trust_function_creators` option must be enabled.
-  - Postgres 9.x
-  - MS-SQL 201x -> SUPPORT IS INCOMPLETE
+- PHP > 5.5 It will be better if you use PHP 7.2.x
+- DBMS: MySQL 5.7.x / MariaDB 10.1.x, Postgres 9.x, MS-SQL 201x
 
-Tested on web-browsers:
+Supported client web-browsers: 
 - Firefox
-- Chrome
+- Internet Explorer 9.x or greater
+- Chrome   
 
 ATTENTION: we have not enough resources to test on all kind of browsers.
            Right now development is done using Chrome & Firefox.
 
 ## 4. Installation & SECURITY
 
-The following details the basic steps for installation on any system.
+The following details the basic steps for installation on any system. 
 Instructions may seem unix-centric but should work on Windows systems.
 
-Barring complications, it should take you about 10-20 minutes
+Barring complications, it should take you about 10-20 minutes 
 to install, configure, and start using TestLink.
 
 Short summary:
@@ -205,11 +192,11 @@ OR  (2 steps):
 	gunzip <filename.tar.gz>
 	tar xvf <filename.tar>
 
-Total Commander, Winzip, and other programs should also be able
+Total Commander, Winzip, and other programs should also be able 
 to handle decompression of the archive.
 
-At this point you may want to rename the directory to something
-different to 'testlink'.
+At this point you may want to rename the directory to something 
+different to 'testlink'. 
 
 ### SECURITY
 
@@ -233,7 +220,7 @@ template directories.
 
 3. Launch web based installer
 We will create the necessary database tables and a basic configuration
-file. From your web server, access http://yoursite/testlink/
+file. From your web server, access http://yoursite/testlink/ 
 or similar URL and follow instructions.
 
 Check Installation manual and TestLink forum if you meet a problem.
@@ -243,7 +230,7 @@ Check Installation manual and TestLink forum if you meet a problem.
 When accessing Installer page you will find only the **new installation**
 option. The migration **has to be done manually** for these special cases:
 
-- Upgrade from 1.9.3 to 1.9.4/5/6/7/../16/17/18/19
+- Upgrade from 1.9.3 to 1.9.4/5/6/7/8/9/10/11/12/13/14/15/16/17
 - Upgrade from 1.9.4/5 to 1.9.7
 - Upgrade from 1.9.7 to 1.9.8
 - Migration from other releases than 1.9.3
@@ -312,7 +299,6 @@ then look at sections: 'Upgrade from 1.9.4/5 to 1.9.7',
                        'Upgrade from 1.9.16 to 1.9.17'
                        'Upgrade from 1.9.17 to 1.9.18'
                        'Upgrade from 1.9.18 to 1.9.19'
-                       'Upgrade from 1.9.19 to 1.9.20'
 
  3. Upgrade from 1.9.7 to 1.9.8
 
@@ -387,23 +373,15 @@ WARNING: if you are using a table prefix replace `prefix` with your prefix
 
 WARNING: if you are using a table prefix replace `prefix` with your prefix
 
-  a. Execute `install/sql/alter_tables/1.9.18/<your_db>/DB.1.9.18/step1/db_schema_update.sql`
-  b. Execute (IF EXISTS) `install/sql/alter_tables/1.9.18/<your_db>/DB.1.9.18/stepZ/z_final_step.sql`
+  a. Execute `install/sql/alter_tables/1.9.18/<your_db>/DB.1.9.17/step1/db_schema_update.sql`
+  b. Execute (IF EXISTS) `install/sql/alter_tables/1.9.18/<your_db>/DB.1.9.17/stepZ/z_final_step.sql`
 
 14. Upgrade from 1.9.18 to 1.9.19
 
 WARNING: if you are using a table prefix replace `prefix` with your prefix
 
-  a. Execute `install/sql/alter_tables/1.9.19/<your_db>/DB.1.9.19/step1/db_schema_update.sql`
-  b. Execute (IF EXISTS) `install/sql/alter_tables/1.9.19/<your_db>/DB.1.9.19/stepZ/z_final_step.sql`
-
-15. Upgrade from 1.9.19 to 1.9.20
-
-WARNING: if you are using a table prefix replace `prefix` with your prefix
-
-  a. Execute `install/sql/alter_tables/1.9.20/<your_db>/DB.1.9.20/step1/db_schema_update.sql`
-  b. Execute (IF EXISTS) `install/sql/alter_tables/1.9.20/<your_db>/DB.1.9.20/stepZ/z_final_step.sql`
-
+  a. Execute `install/sql/alter_tables/1.9.19/<your_db>/DB.1.9.18/step1/db_schema_update.sql`
+  b. Execute (IF EXISTS) `install/sql/alter_tables/1.9.19/<your_db>/DB.1.9.18/stepZ/z_final_step.sql`
 
 **Hint**: When using MySQL Query Browser make sure you are not using single
           command execution. (open script or use special script tab to
@@ -420,7 +398,7 @@ than yours. Extreme example: migration from 1.7.4
     1.7.4 => 1.7.5 => 1.8.1 => 1.8.2 => 1.8.3 => 1.8.4 => 1.8.5 => 1.9.0
     1.9.0 => 1.9.1 => 1.9.2 => 1.9.3 => 1.9.4 => 1.9.5 => 1.9.6 => 1.9.7 =>
     1.9.8 => 1.9.9 => 1.9.10 => 1.9.11 => 1.9.12 => 1.9.13 => 1.9.14 =>
-    1.9.15 => 1.9.16 => 1.9.17 => 1.9.18 => 1.9.19 => 1.9.20
+    1.9.15 => 1.9.16 => 1.9.17 => 1.9.18 => 1.9.19
 
 You have to read carefully README and instructions (if any) provided by
 installer. Sometimes version changes do not require actions on DB structure
@@ -436,7 +414,7 @@ This list comprises people who have helped:
                          code reviewer (well, really the One Man Band ;) )
   * Asiel Brumfield - Infrastructure
 
- 
+  * Netzuleando Development OpenSource (netzuleando@gmail.com)
 
 ### Contributors and developers active on older releases
 
@@ -448,8 +426,7 @@ This list comprises people who have helped:
   * Martin Havlat - Project lead, builds, infrastructure, developer
   * Andreas Morsing - core developer
   * Amit Khullar
-  * Netzuleando Development OpenSource (netzuleando@gmail.com)
-  
+
 ### TestLink - QA Team - for 1.9.4
 
   * Romoy Headly - QA Manager
@@ -548,19 +525,7 @@ PLEASE: read these short hints before you write a topic:
   - :!: Consider that some issues are related to Apache, browser or database
         instead of TestLink. Use Google first.
 
-## 10. Changes (Just a glance)
-
-### 1.9.20
-  - DB Schema changes new views, tables.
-  - Platforms can be used during Test Case Design
-  - Security Fixes
-  - MD5 replaced with BCRYPT for DB stored password
-  - Roles issues fixed
-  - new right to allow add/remove keywords from executed test case versions
-  - Heads Ups on execution through use of special Keyword
-  - A couple of new reports
- ... and more (read CHANGELOG file)
-
+## 10. Changes
 
 ### 1.9.19
   - DB Schema changes new unique indexes.
@@ -578,7 +543,7 @@ PLEASE: read these short hints before you write a topic:
   - code repository integration (to manage external scripts)
   - more features on requirements
     ... and more (read CHANGELOG file)
-
+  
 
 ### 1.9.16
   - issues on step are saved on TestLink DB wth step ID
@@ -640,10 +605,6 @@ If you are interested you can [get some info][free]:
 [free]: http://www.freetest.net.br
 
 ## 12. Security
-
-### 1.9.20
-  - Multiple XSS and Blind SQL Injection
-
 
 ### 1.9.15
   - Multiple XSS and Blind SQL Injection by
@@ -755,7 +716,7 @@ BEFORE the commit ID. => then Nike => Just DO IT
 [upgf]: http://forum.testlink.org/viewforum.php?f=11
 [uupg]: http://forum.testlink.org/viewforum.php?f=58
 [tucf]: http://www.testlink.org/
-[mbug]: http://mantis.testlink.org/
+[mbug]: http://www.testlink.org/mantis/
 [twt]: http://twitter.com/#!/TLOpenSource
 [free]: http://www.freetest.net.br
 [csrf]: https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet

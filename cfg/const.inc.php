@@ -8,7 +8,7 @@
  * 
  * @filesource  const.inc.php
  * @package     TestLink
- * @copyright   2007-2020, TestLink community 
+ * @copyright   2007-2019, TestLink community 
  * @see         config.inc.php
  *
  **/
@@ -19,15 +19,15 @@
 define('TL_SMARTY_VERSION',3);  // @since 1.9.8
 
 /** TestLink Release version (MUST BE changed before the release day) */
-define('TL_VERSION_NUMBER', '1.9.20'); 
-define('TL_VERSION', TL_VERSION_NUMBER . ' [DEV] '); 
+define('TL_VERSION_NUMBER', '1.9.19'); 
+define('TL_VERSION', TL_VERSION_NUMBER . ' (Metonic cycle)'); 
 define('TL_FACE_DIR', 'prague'); 
 
 /** Latest Database version that is used to give users feedback 
  *  about necesssary upgrades
  *  if you set this parameter also upgrade 
  *  lib/functions/configCheck.php - checkSchemaVersion() */
-define('TL_LATEST_DB_VERSION', 'DB ' . '1.9.20');
+define('TL_LATEST_DB_VERSION', 'DB ' . '1.9.19');
 
 // needed to avoid problems in install scripts that do not include config.inc.php
 // want to point to root install dir, need to remove fixed part
@@ -52,12 +52,6 @@ ini_set('include_path',ini_get('include_path') .
 
 /** Localization directory base */
 define('TL_LOCALE_PATH', TL_ABS_PATH . 'locale/');
-
-clearstatcache();
-$tf = 'custom_const.inc.php';
-if ( file_exists($tf) ) {
-  require_once($tf);
-}
 
 
 // --------------------------------------------------------------------------------
@@ -375,11 +369,6 @@ $tlCfg->results['status_code'] = array('failed' => 'f','blocked' => 'b',
                                        'not_available' => 'x','unknown' => 'u',
                                        'all' => 'a'); 
 
-/* for some reports */
-$tlCfg->results['status_order'] = array('not_run' => 'n',
-                                        'passed' => 'p',
-                                        'failed' => 'f',
-                                        'blocked' => 'b');
 
 /** 
  * Used to get localized string to show to users
@@ -957,11 +946,5 @@ define('LINK_TC_REQ_CLOSED_BY_NEW_REQVERSION', 4);
 define('LINK_TC_RELATION_OPEN', 1);
 define('LINK_TC_RELATION_CLOSED_BY_EXEC', 2);
 define('LINK_TC_RELATION_CLOSED_BY_NEW_TCVERSION', 3);
-
-
-define('USE_LATEST_EXEC_ON_CONTEX_FOR_COUNTERS', 1);
-define('USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS',2);
-define('USE_LATEST_EXEC_ON_TESTPLAN_PLAT_FOR_COUNTERS',3);
-
 
 // END 

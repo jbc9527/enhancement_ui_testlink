@@ -11,7 +11,7 @@
 --  -----------------------------------------------------------------------------------
 
 --  Database version
-INSERT INTO /*prefix*/db_version (version,notes,upgrade_ts) VALUES ('DB 1.9.20','Test Link 1.9.20 Raijin',GETDATE());
+INSERT INTO /*prefix*/db_version (version,notes,upgrade_ts) VALUES ('DB 1.9.17','Test Link 1.9.17 Alan Turing',GETDATE());
 
 --  Node types -
 SET IDENTITY_INSERT /*prefix*/node_types ON
@@ -100,10 +100,6 @@ INSERT INTO /*prefix*/rights (id,description) VALUES (51,'codetracker_management
 INSERT INTO /*prefix*/rights (id,description) VALUES (52,'codetracker_view');
 INSERT INTO /*prefix*/rights (id,description) VALUES (53,'cfield_assignment');
 INSERT INTO /*prefix*/rights (id,description) VALUES (54,'exec_assign_testcases');
-
--- since 1.9.20
-INSERT INTO /*prefix*/rights (id,description) VALUES (55,'testproject_add_remove_keywords_executed_tcversions');
-
 
 SET IDENTITY_INSERT /*prefix*/rights OFF
 

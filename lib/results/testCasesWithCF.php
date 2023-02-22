@@ -8,6 +8,8 @@
  *
  * For a test plan, list test cases with Execution Custom Field Data
  *
+ * @internal revisions
+ * @since 1.9.7
  */
 require_once("../../config.inc.php");
 require_once("common.php");
@@ -140,24 +142,21 @@ $smarty->display($templateCfg->template_dir . $templateCfg->default_template);
  */
 function init_args(&$dbHandler)
 {
-  $argsObj = new stdClass();
+    $argsObj = new stdClass();
 	$argsObj->doIt = false;
-  $argsObj->showPlatforms = false;
-  $argsObj->tproject_id = isset($_SESSION['testprojectID']) ? $_SESSION['testprojectID'] : 0;
-  $argsObj->tproject_id = intval($argsObj->tproject_id);
+    $argsObj->showPlatforms = false;
+    $argsObj->tproject_id = isset($_SESSION['testprojectID']) ? $_SESSION['testprojectID'] : 0;
+    $argsObj->tproject_name = isset($_SESSION['testprojectName']) ? $_SESSION['testprojectName'] : '';
 
+    $argsObj->tplan_name = '';
+    $argsObj->tplan_id = isset($_REQUEST['tplan_id']) ? $_REQUEST['tplan_id'] : 0;
+    if($argsObj->tplan_id == 0)
+    {
+        $argsObj->tplan_id = isset($_SESSION['testplanID']) ? $_SESSION['testplanID'] : 0;
+    }
 
-  $argsObj->tproject_name = isset($_SESSION['testprojectName']) ? $_SESSION['testprojectName'] : '';
-
-  $argsObj->tplan_name = '';
-  $argsObj->tplan_id = isset($_REQUEST['tplan_id']) ? $_REQUEST['tplan_id'] : 0;
-  $argsObj->tplan_id = intval($argsObj->tplan_id);
-
-  if ($argsObj->tplan_id == 0) {
-    $argsObj->tplan_id = isset($_SESSION['testplanID']) ? $_SESSION['testplanID'] : 0;
-  }
-
-  if($argsObj->tplan_id > 0) {
+    if($argsObj->tplan_id > 0)
+    {
     	$tplan_mgr = new testplan($dbHandler);
         $tplan_info = $tplan_mgr->get_by_id($argsObj->tplan_id);
         $argsObj->tplan_name = $tplan_info['name'];
@@ -167,9 +166,9 @@ function init_args(&$dbHandler)
 		$getOpt = array('outputFormat' => 'map');
 		$argsObj->platforms = $tplan_mgr->getPlatforms($argsObj->tplan_id,$getOpt);
 		unset($tplan_mgr);
-  }
+    }
 
-  return $argsObj;
+    return $argsObj;
 }
 
 
@@ -312,3 +311,4 @@ function checkRights(&$db,&$user)
 {
 	return $user->hasRight($db,'testplan_metrics');
 }
+?>

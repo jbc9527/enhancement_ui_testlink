@@ -7,7 +7,7 @@
  * Legacy code (party covered by classes now)
  *
  * @package     TestLink
- * @copyright   2005-2020, TestLink community 
+ * @copyright   2005-2018, TestLink community 
  * @filesource  exec.inc.php
  * @link        http://www.testlink.org/
  *
@@ -23,7 +23,7 @@ require_once('attachments.inc.php');
  * 
  * @return array map of 'status_code' => localized string
  **/
-function createResultsMenu($statusToExclude = null) {
+function createResultsMenu() {
   $resultsCfg = config_get('results');
   
   // Fixed values, that has to be added always
@@ -40,14 +40,9 @@ function createResultsMenu($statusToExclude = null) {
     $menu_data[$code] = lang_get($status_label); 
   }
   
-  if( null != $statusToExclude ) {
-    foreach($statusToExclude as $code) {
-      unset($menu_data[$code]);
-    }
-  }
   return $menu_data;
 }
-   
+  
   
 /**
  * write execution result to DB
@@ -67,7 +62,6 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
   static $cfield_mgr;
   static $tprojectMgr;
 
-  $uploadOp = null;
   if(is_null($docRepo)) {
     $docRepo = tlAttachmentRepository::create($db);
     $resultsCfg = config_get('results');
@@ -99,22 +93,6 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
     } 
   }
   
-  // Steps Partial Execution Feature
-  // When writting the execution, we will delete any partial execution
-  // if the test case version has steps defined.
-  // we check for the existence of inputs related to test case steps,
-  // because our choice is also get the test steps ids fromm these inputs.
-  //
-  if( isset($_REQUEST['step_notes']) ) {
-    $stepsIDSet = array_keys($_REQUEST['step_notes']);
-    $ctx = new stdClass();
-    $ctx->testplan_id = $execSign->tplan_id;
-    $ctx->platform_id = $execSign->platform_id;
-    $ctx->build_id = $execSign->build_id;
-    $tcaseMgr->deleteStepsPartialExec($stepsIDSet,$ctx);
-  }
- 
-
   if( isset($exec_data['do_bulk_save']) ) {
     // create structure to use common algoritm
     $item2loop= $exec_data['status'];
@@ -200,18 +178,6 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
         $cfield_mgr->execution_values_to_db($hash_cf,$tcversion_id, $execution_id, $execSign->tplan_id,$cf_map);
       }               
 
-      // Attachment @exec level
-      // Available only in single test execution
-      //
-      $uploadOp = new stdClass();
-      $uploadOp->tcLevel = null;
-      $uploadOp->stepLevel = null;
-      if( isset($_FILES['uploadedFile']['name'][0]) && 
-          !is_null($_FILES['uploadedFile']['name'][0])) {
-        $uploadOp->tcLevel = addAttachmentsToExec($execution_id,$docRepo);
-      }  
-
-
       $hasMoreData = new stdClass();
       $hasMoreData->step_notes = isset($exec_data['step_notes']);
       $hasMoreData->step_status = isset($exec_data['step_status']);
@@ -233,7 +199,8 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
 
             $status = strtolower(trim($exec_data['step_status'][$step_id]));
             $status = $status[0];
-            if( $status != $resultsCfg['status_code']['not_run'] ) {
+            if( $status != $resultsCfg['status_code']['not_run'] )
+            {
               $sql .= ",status";
               $values .= ",'" . $db->prepare_string($status) . "'";
             }  
@@ -248,53 +215,50 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
               $repOpt = array('allow_empty_title' => TRUE);
 
               // May be we have enabled MULTIPLE on file upload
-              if( is_array($_FILES['uploadedFile']['name'][$step_id])) {
+              if( is_array($_FILES['uploadedFile']['name'][$step_id])) 
+              {
                 $curly = count($_FILES['uploadedFile']['name'][$step_id]);
-                for($moe=0; $moe < $curly; $moe++) {
+                for($moe=0; $moe < $curly; $moe++)
+                {
                   $fSize = isset($_FILES['uploadedFile']['size'][$step_id][$moe]) ? 
-                  $_FILES['uploadedFile']['size'][$step_id][$moe] : 0;
+                           $_FILES['uploadedFile']['size'][$step_id][$moe] : 0;
 
                   $fTmpName = isset($_FILES['uploadedFile']['tmp_name'][$step_id][$moe]) ? 
                               $_FILES['uploadedFile']['tmp_name'][$step_id][$moe] : '';
 
-                  if ($fSize && $fTmpName != "") {
+                  if ($fSize && $fTmpName != "")
+                  {
                     $fk2loop = array_keys($_FILES['uploadedFile']);
-                    foreach($fk2loop as $tk) {
+                    foreach($fk2loop as $tk)
+                    {
                       $fInfo[$tk] = $_FILES['uploadedFile'][$tk][$step_id][$moe];
                     }  
-
-                    $upx = $docRepo->insertAttachment(
-                      $execution_tcsteps_id,$target,'',$fInfo,$repOpt);
-                    if ($upx != null && $upx->statusOK == false 
-                        && $uploadOp->stepLevel == null) {
-                      $uploadOp->stepLevel = $upx;
-                    } 
+                    $uploaded = $docRepo->insertAttachment($execution_tcsteps_id,$target,'',$fInfo,$repOpt);
                   }
                 }  
-              } else {
+              } 
+              else
+              {
                 $fSize = isset($_FILES['uploadedFile']['size'][$step_id]) ? $_FILES['uploadedFile']['size'][$step_id] : 0;
                 $fTmpName = isset($_FILES['uploadedFile']['tmp_name'][$step_id]) ? 
                             $_FILES['uploadedFile']['tmp_name'][$step_id] : '';
 
-                if ($fSize && $fTmpName != "") {
+                if ($fSize && $fTmpName != "")
+                {
                   $fk2loop = array_keys($_FILES['uploadedFile']);
-                  foreach($fk2loop as $tk) {
+                  foreach($fk2loop as $tk)
+                  {
                     $fInfo[$tk] = $_FILES['uploadedFile'][$tk][$step_id];
                   }  
-                  $upx = $docRepo->insertAttachment($execution_tcsteps_id,
-                                                    $target,'',$fInfo);
-                  if ($upx != null && $upx->statusOK == false 
-                      && $uploadOp->stepLevel == null) {
-                    $uploadOp->stepLevel = $upx;
-                  } 
+                  $uploaded = $docRepo->insertAttachment($execution_tcsteps_id,$target,'',$fInfo);
                 }
               } 
+              
             }
           }         
         }  
       }  
 
-      // Copy attachments from latest execution ?
       $itCheckOK = !is_null($issueTracker) && 
                    method_exists($issueTracker,'addIssue');
       
@@ -310,9 +274,6 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
         $execContext->tplan_apikey = $execSign->tplan_apikey;
 
         $execContext->addLinkToTL = $execSign->addLinkToTL;
-        $execContext->addLinkToTLPrintView = 
-          $execSign->addLinkToTLPrintView;
-        
         $execContext->direct_link = $execSign->direct_link;
         $execContext->tcstep_id = 0;
 
@@ -320,11 +281,8 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
         if( isset($exec_data['createIssue']) ) {
           completeCreateIssue($execContext,$execSign);
           
-          $aop = array('addLinkToTL' => $execContext->addLinkToTL,
-                       'addLinkToTLPrintView' => $execContext->addLinkToTLPrintView);
-
           $addIssueOp['createIssue'] = addIssue($db,$execContext,$issueTracker,
-                                                $aop);
+                                                $execContext->addLinkToTL);
           $addIssueOp['type'] = 'createIssue';
         }  
         
@@ -342,7 +300,7 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
     }
   }
 
-  return array($execSet,$addIssueOp,$uploadOp);
+  return array($execSet,$addIssueOp);
 }
 
 /**
@@ -642,7 +600,8 @@ function getBugsForExecutions(&$db,&$bug_interface,$execSet,$raw = null)
 /**
  *
  */
-function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
+function addIssue($dbHandler,$argsObj,$itsObj,$addLinkToTL)
+{
   static $my;
 
   if(!$my) {
@@ -655,7 +614,7 @@ function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
   $ret['status_ok'] = true;             
   $ret['msg'] = '';
 
-  $issueText = generateIssueText($dbHandler,$argsObj,$itsObj,$opt);  
+  $issueText = generateIssueText($dbHandler,$argsObj,$itsObj,$addLinkToTL);  
 
   $issueTrackerCfg = $itsObj->getCfg();
   if(property_exists($issueTrackerCfg, 'issuetype')) {
@@ -675,13 +634,10 @@ function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
     $setReporter = isset($issueFields[$issueType]['fields']['reporter']);
   }  
 
+
   $opt = new stdClass();
   if( $setReporter ) {
     $opt->reporter = $argsObj->user->login;
-    $opt->reporter_email = trim($argsObj->user->emailAddress);
-    if( '' == $opt->reporter_email ) {
-      $opt->reporter_email = $opt->reporter;
-    }
   }
 
   $p2check = array('issueType','issuePriority',
@@ -692,15 +648,11 @@ function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
     }   
   }  
 
-  $opt->execContext = $issueText->execContext;
-  $opt->execSignature = $issueText->execSignature;
-
-
   // Management of Dynamic Values From XML Configuration 
   // (@20180120 only works for redmine)  
   $opt->tagValue = $issueText->tagValue;
-
-  $rs = $itsObj->addIssue($issueText->summary, $issueText->description,$opt); 
+ 
+  $rs = $itsObj->addIssue($issueText->summary,$issueText->description,$opt); 
   
   $ret['msg'] = $rs['msg'];
   if( ($ret['status_ok'] = $rs['status_ok']) ) {                   
@@ -719,7 +671,8 @@ function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
  * copy issues from execution to another execution
  *
  */
-function copyIssues(&$dbHandler,$source,$dest) {
+function copyIssues(&$dbHandler,$source,$dest)
+{
   $debugMsg = 'FILE:: ' . __FILE__ . ' :: FUNCTION:: ' . __FUNCTION__;
 
   $tables = tlObjectWithDB::getDBTables(array('execution_bugs'));
@@ -758,11 +711,8 @@ function copyIssues(&$dbHandler,$source,$dest) {
 /**
  *
  */
-function generateIssueText($dbHandler,$argsObj,$itsObj,$opt=null) {
+function generateIssueText($dbHandler,$argsObj,$itsObj,$addLinkToTL=false) {
   $ret = new stdClass();
-
-  $options = array('addLinkToTL' => false, 'addLinkToTLPrintView' => false);
-  $options = array_merge($options,(array)$opt);
 
   $opOK = false;             
   $msg = '';
@@ -798,13 +748,6 @@ function generateIssueText($dbHandler,$argsObj,$itsObj,$opt=null) {
                                 $exec['build_name'],$exec['execution_ts'],
                                 $exec['statusVerbose']); 
 
-  $ret->execContext = array('testplan_name' => $exec['testplan_name'],
-                            'platform_name' => $platform_identity,
-                            'build_name' => $exec['build_name']);
-  
-  $ret->execSignature = array('id' => $argsObj->exec_id,
-                              'timestamp' => $exec['execution_ts'],
-                              'status' => $exec['statusVerbose']); 
 
   if(property_exists($argsObj, 'bug_notes')) {  
     $lblKeys = array('issue_exec_id','issue_tester','issue_tplan','issue_build',
@@ -828,16 +771,6 @@ function generateIssueText($dbHandler,$argsObj,$itsObj,$opt=null) {
                     $exec['execution_notes']);
  
     $ret->description = str_replace($tags,$values,$argsObj->bug_notes);
-
-    // 20190426
-    $target['value'] = '%%EXECPLINK%%';
-    $doIt = true;
-    $url2use = $argsObj->basehref . 'lnl.php?type=exec&id=' . 
-               $argsObj->exec_id . '&apikey=' . 
-               $exec['testplan_api_key'];
-
-    $ret->description = str_replace($target['value'],$url2use,$ret->description);
-
    
     // @since 1.9.14
     // %%EXECATT:1%% => lnl.php?type=file&id=1&apikey=gfhdgjfgdsjgfjsg
@@ -880,14 +813,8 @@ function generateIssueText($dbHandler,$argsObj,$itsObj,$opt=null) {
     $ret->summary = $argsObj->bug_summary;
   }
 
-  if( $options['addLinkToTL'] ) {
+  if( $addLinkToTL ) {
     $ret->description .= "\n\n" . lang_get('dl2tl') . $argsObj->direct_link;
-  }  
-
-  if( $options['addLinkToTLPrintView'] ) {
-    $ret->description .= "\n\n" . lang_get('dl2tlpv') . $argsObj->basehref . 
-      'lnl.php?type=exec&id=' . $argsObj->exec_id . '&apikey=' . 
-      $exec['testplan_api_key'];
   }  
 
   return $ret;
@@ -983,49 +910,4 @@ function completeIssueForStep(&$execContext,$execSigfrid,$exData,$stepID) {
   }
 
   return $addLink;
-}
-
-
-/**
- *
- */
-function addAttachmentsToExec($execID,&$docRepo) {
-
-  $tableRef = DB_TABLE_PREFIX . 'executions';
-  $repOpt = array('allow_empty_title' => TRUE);
-
-  // 0 is magic!!, 0 is used in the smarty template
-  // May be we have enabled MULTIPLE on file upload
-
-  $honeyPot = array('name' => null,'size' => null,
-                    'tmp_name' => null, 'type' => null,
-                    'error' => null);
-  foreach($honeyPot as $bee => $nuu) {
-   $honeyPot[$bee] = (array)$_FILES['uploadedFile'][$bee][0];
-  }
-
-  $curly = count($honeyPot);
-  $op = null;
-  for($moe=0; $moe < $curly; $moe++) {
-    $fSize = isset($honeyPot['size'][$moe]) ? 
-             $honeyPot['size'][$moe] : 0;
-
-    $fTmpName = isset($honeyPot['tmp_name'][$moe]) ? 
-                $honeyPot['tmp_name'][$moe] : '';
-
-    if ($fSize && $fTmpName != "") {
-      $fk2loop = array_keys($_FILES['uploadedFile']);
-      foreach($fk2loop as $tk) {
-        $fInfo[$tk] = $honeyPot[$tk][$moe];
-      }  
-
-      $uploadOp = $docRepo->insertAttachment($execID,$tableRef,'',
-                                               $fInfo,$repOpt);
-
-      if ($uploadOp->statusOK == false && $op == null) {
-        $op = $uploadOp;
-      }
-    }
-  } 
-  return $op;
 }

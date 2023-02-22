@@ -7,6 +7,9 @@
  *
  * View existing and create a new req. specification.
  *
+ * @internal revisions
+ * @since 1.9.15
+ *
  */
 require_once("../../config.inc.php");
 require_once("common.php");
@@ -206,13 +209,13 @@ function renderGui(&$argsObj,$guiObj,$opObj,$templateCfg,$editorCfg)
       $tpd = isset($key2loop['template_dir']) ? $opObj->template_dir : $templateCfg->template_dir;
 
       $pos = strpos($tpl, '.php');
-      if ($pos === false) {
+      if($pos === false)
+      {
         $tpl = $tpd . $tpl;
-      } else {
-        $renderType = 'redirect'; 
-        if (null != $guiObj->uploadOp && $guiObj->uploadOp->statusOK == false) {
-          $tpl .= "&uploadOPStatusCode=" . $guiObj->uploadOp->statusCode;
-        }
+      }
+      else
+      {
+        $renderType = 'redirect';  
       }
     break;
   }

@@ -12,6 +12,7 @@
  * @link        http://testlink.sourceforge.net/
  *
  *
+ * @internal revisions
  **/
 
 class issueTrackerCommands
@@ -23,10 +24,9 @@ class issueTrackerCommands
   private $guiOpWhiteList;  // used to sanitize inputs on different pages
   private $entitySpec;
 
-  /**
-   *
-   */
-  function __construct(&$dbHandler) {
+
+  function __construct(&$dbHandler)
+  {
     $this->db=$dbHandler;
     $this->issueTrackerMgr = new tlIssueTracker($dbHandler);
     $this->entitySpec = $this->issueTrackerMgr->getEntitySpec();
@@ -39,17 +39,13 @@ class issueTrackerCommands
                                              'doUpdate','doDelete'));
   }
 
-  /**
-   *
-   */
-  function setTemplateCfg($cfg) {
+  function setTemplateCfg($cfg)
+  {
     $this->templateCfg = $cfg;
   }
 
-  /**
-   *
-   */
-  function getGuiOpWhiteList() {
+  function getGuiOpWhiteList()
+  {
     return $this->guiOpWhiteList;
   }
 
@@ -57,7 +53,8 @@ class issueTrackerCommands
    * 
    *
    */
-  function initGuiBean(&$argsObj, $caller) {
+  function initGuiBean(&$argsObj, $caller)
+  {
     $obj = new stdClass();
     $obj->action = $caller;
     $obj->typeDomain = $this->issueTrackerMgr->getTypes();
@@ -79,7 +76,8 @@ class issueTrackerCommands
 
     $obj->connectionStatus = '';
 
-    switch($caller) {
+    switch($caller)
+    {
       case 'delete':
       case 'doDelete':
         $obj->submit_button_label = '';

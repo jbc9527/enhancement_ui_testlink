@@ -454,12 +454,6 @@ CREATE NONCLUSTERED INDEX /*prefix*/IX_pid_m_nodeorder ON  /*prefix*/nodes_hiera
   node_order ASC
 ) ON [PRIMARY];
 
-CREATE NONCLUSTERED INDEX /*prefix*/IX_node_type_id ON  /*prefix*/nodes_hierarchy 
-(
-  node_type_id ASC
-) ON [PRIMARY];
-
-
 CREATE TABLE /*prefix*/req_coverage (
   req_id int NOT NULL,
   testcase_id int NOT NULL,
@@ -575,29 +569,19 @@ CREATE TABLE /*prefix*/role_rights (
 ) ON [PRIMARY];
 
 CREATE TABLE /*prefix*/testcase_keywords (
-  id int NOT NULL,
   testcase_id int NOT NULL CONSTRAINT /*prefix*/DF_testcase_keywords_testcase_id DEFAULT ((0)),
-  tcversion_id int NOT NULL CONSTRAINT /*prefix*/DF_testcase_keywords_tcversion_id DEFAULT ((0)),
   keyword_id int NOT NULL CONSTRAINT /*prefix*/DF_testcase_keywords_keyword_id DEFAULT ((0)),
-CONSTRAINT /*prefix*/PK_testcase_keywords PRIMARY KEY CLUSTERED 
-(
-  id 
-) ON [PRIMARY],
-CONSTRAINT /*prefix*/UIX_testcase_keywords UNIQUE NONCLUSTERED 
+ CONSTRAINT /*prefix*/PK_testcase_keywords PRIMARY KEY CLUSTERED 
 (
   testcase_id ASC,
-  tcversion_id ASC
   keyword_id ASC
 ) ON [PRIMARY]
-
 ) ON [PRIMARY];
 
 CREATE NONCLUSTERED INDEX /*prefix*/IX_testcase_keywords ON  /*prefix*/testcase_keywords 
 (
-  tcversion_id ASC
+  testcase_id ASC
 ) ON [PRIMARY];
-
-
 
 CREATE TABLE /*prefix*/tcversions (
   id int NOT NULL,
@@ -734,7 +718,7 @@ CREATE TABLE /*prefix*/user_testplan_roles (
 CREATE TABLE /*prefix*/users (
   id int IDENTITY(1,1) NOT NULL,
   login varchar(100)  NOT NULL,
-  password varchar(255)  NOT NULL,
+  password varchar(32)  NOT NULL,
   role_id int NOT NULL CONSTRAINT /*prefix*/DF_users_role_id DEFAULT ((0)),
   email varchar(100)  NOT NULL,
   first varchar(50)  NOT NULL,

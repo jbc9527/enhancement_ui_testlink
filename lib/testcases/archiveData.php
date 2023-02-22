@@ -84,7 +84,6 @@ function init_args(&$dbHandler) {
                    "id" => array(tlInputParameter::INT_N),
                    "tcase_id" => array(tlInputParameter::INT_N),
                    "tcversion_id" => array(tlInputParameter::INT_N),
-                   "tplan_id" => array(tlInputParameter::INT_N),
                    "targetTestCase" => array(tlInputParameter::STRING_N,0,24),
                    "show_path" => array(tlInputParameter::INT_N),
                    "show_mode" => array(tlInputParameter::STRING_N,0,50),
@@ -104,18 +103,6 @@ function init_args(&$dbHandler) {
   $args->user_id = isset($_SESSION['userID']) ? $_SESSION['userID'] : 0;
   $args->user = isset($_SESSION['currentUser']) ? $_SESSION['currentUser'] : null;
 
-  // ---------------------------
-  // whitelist
-  $wl = array_flip(array('testcase','testproject','testsuite'));
-  $args->edit = trim($args->edit);
-
-  if (!isset($wl[$args->edit])) {
-    tLog('Argument "edit" has invalid value: ' . $args->edit , 'ERROR');
-    trigger_error($_SESSION['currentUser']->login . 
-                  '> Argument "edit" has invalid value.', E_USER_ERROR);
-  }
-  // ---------------------------
-  
   $args->feature = $args->edit;
   $args->tcaseTestProject = null;
   $args->viewerArgs = null;
@@ -133,7 +120,8 @@ function init_args(&$dbHandler) {
   $args->refreshTree = getSettingFromFormNameSpace('edit_mode','setting_refresh_tree_on_action');
 
   // Try to understan how this script was called.
-  switch($args->caller) {
+  switch($args->caller)
+  {
     case 'navBar':
       systemWideTestCaseSearch($dbHandler,$args,$cfg->glue_character);
     break;
@@ -147,41 +135,46 @@ function init_args(&$dbHandler) {
     break;
 
     default:
-      if (!$args->tcversion_id) {
+      if (!$args->tcversion_id)
+      {
         $args->tcversion_id = testcase::ALL_VERSIONS;
       }
     break;
+
   }
 
 
   // used to manage goback  
-  if(intval($args->tcase_id) > 0) {
+  if(intval($args->tcase_id) > 0)
+  {
     $args->feature = 'testcase';
     $args->id = intval($args->tcase_id);
   }
     
-  switch($args->feature) {
+  switch($args->feature)
+  {
     case 'testsuite':
       $args->viewerArgs = null;
       $_SESSION['setting_refresh_tree_on_action'] = ($args->refreshTree) ? 1 : 0;
     break;
      
     case 'testcase':
-      $args->viewerArgs = array('action' => '', 'msg_result' => '', 
-        'user_feedback' => '',
-        'disable_edit' => 0, 'refreshTree' => 0,
-        'add_relation_feedback_msg' => $args->add_relation_feedback_msg);
+      $args->viewerArgs = array('action' => '', 'msg_result' => '', 'user_feedback' => '',
+                                'disable_edit' => 0, 'refreshTree' => 0,
+                                'add_relation_feedback_msg' => $args->add_relation_feedback_msg);
             
       $args->id = is_null($args->id) ? 0 : $args->id;
       $args->tcase_id = $args->id;
 
-      if( is_null($args->tcaseTestProject) && $args->id > 0 ) {
+      if( is_null($args->tcaseTestProject) && $args->id > 0 )
+      {
         $args->tcaseTestProject = $tprojectMgr->getByChildID($args->id);
       }
     break;
   }
 
-  if(is_null($args->tcaseTestProject)) {  
+  if(is_null($args->tcaseTestProject))
+  {  
     $args->tcaseTestProject = $tprojectMgr->get_by_id($args->tproject_id);
   }
   $args->requirementsEnabled = $args->tcaseTestProject['opt']->requirementsEnabled;
@@ -193,7 +186,8 @@ function init_args(&$dbHandler) {
   $args->cts = null;
 
   unset($tprojectMgr);
-  if( ($args->codeTrackerEnabled = intval($args->tcaseTestProject['code_tracker_enabled'])) ) {
+  if( ($args->codeTrackerEnabled = intval($args->tcaseTestProject['code_tracker_enabled'])) )
+  {
     $ct_mgr = new tlCodeTracker($dbHandler);
     $args->ctsCfg = $ct_mgr->getLinkedTo($args->tproject_id);
     $args->cts = $ct_mgr->getInterfaceObject($args->tproject_id);
@@ -214,27 +208,17 @@ function initializeEnv($dbHandler) {
   $args = init_args($dbHandler);
   $gui = new stdClass();
 
-  $grant2check = 
-    array('mgt_modify_tc','mgt_view_req','testplan_planning',
-          'mgt_modify_product','mgt_modify_req','testcase_freeze',
-          'keyword_assignment','req_tcase_link_management',
-          'testproject_edit_executed_testcases',
-          'testproject_delete_executed_testcases',
-          'testproject_add_remove_keywords_executed_tcversions',
-          'delete_frozen_tcversion');
-
+  $grant2check = array('mgt_modify_tc','mgt_view_req','testplan_planning','mgt_modify_product',
+                       'mgt_modify_req','testcase_freeze','keyword_assignment','req_tcase_link_management',
+                       'testproject_edit_executed_testcases','testproject_delete_executed_testcases');
   $grants = new stdClass();
   foreach($grant2check as $right) {
     $grants->$right = $_SESSION['currentUser']->hasRight($dbHandler,$right,$args->tproject_id);
     $gui->$right = $grants->$right;
   }
-
-  $gui->modify_tc_rights = $gui->mgt_modify_tc;
-
+  
   $gui->form_token = $args->form_token;
   $gui->tproject_id = $args->tproject_id;
-  $gui->tplan_id = $args->tplan_id;
-
   $gui->page_title = lang_get('container_title_' . $args->feature);
   $gui->requirementsEnabled = $args->requirementsEnabled; 
   $gui->automationEnabled = $args->automationEnabled; 
@@ -273,17 +257,20 @@ function systemWideTestCaseSearch(&$dbHandler,&$argsObj,$glue)
   // in situation where it's role is not this.
   // Anyway i will work on this in the future (if I've time)
   //
-  if (strpos($argsObj->targetTestCase,$glue) === false) {
+  if (strpos($argsObj->targetTestCase,$glue) === false)
+  {
     // We suppose user was lazy enough to do not provide prefix,
     // then we will try to help him/her
     $argsObj->targetTestCase = $argsObj->tcasePrefix . $argsObj->targetTestCase;
   }
 
-  if( !is_null($argsObj->targetTestCase) ) {
+  if( !is_null($argsObj->targetTestCase) )
+  {
     // parse to get JUST prefix, find the last glue char.
     // This useful because from navBar, user can request search of test cases that belongs
     // to test project DIFFERENT to test project setted in environment
-    if( ($gluePos = strrpos($argsObj->targetTestCase, $glue)) !== false) {
+    if( ($gluePos = strrpos($argsObj->targetTestCase, $glue)) !== false)
+    {
       $tcasePrefix = substr($argsObj->targetTestCase, 0, $gluePos);
     }
 
@@ -293,7 +280,8 @@ function systemWideTestCaseSearch(&$dbHandler,&$argsObj,$glue)
     $tcaseMgr = new testcase($dbHandler);
     $argsObj->tcase_id = $tcaseMgr->getInternalID($argsObj->targetTestCase);
     $dummy = $tcaseMgr->get_basic_info($argsObj->tcase_id,array('number' => $argsObj->tcaseVersionNumber));
-    if(!is_null($dummy)) {
+    if(!is_null($dummy))
+    {
       $argsObj->tcversion_id = $dummy[0]['tcversion_id'];
     }
   }
@@ -370,8 +358,6 @@ function processTestCase(&$dbHandler,$tplEngine,$args,&$gui,$grants,$cfg) {
       $gui->path_info = $item_mgr->tree_manager->get_full_path_verbose($args->id);
     }
     $platform_mgr = new tlPlatform($dbHandler,$args->tproject_id);
-
-    $opx = array();
     $gui->platforms = $platform_mgr->getAllAsMap();
     $gui->direct_link = $item_mgr->buildDirectWebLink($_SESSION['basehref'],$args->id);
 

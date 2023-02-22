@@ -24,7 +24,8 @@ $gui->items = $issueTrackerMgr->getAll(array('output' => 'add_link_count', 'chec
 $gui->canManage = $args->currentUser->hasRight($db,"issuetracker_management");
 $gui->user_feedback = $args->user_feedback;
 
-if($args->id > 0) {
+if($args->id > 0)
+{
   $gui->items[$args->id]['connection_status'] = $issueTrackerMgr->checkConnection($args->id) ? 'ok' : 'ko'; 
 }
 
@@ -37,10 +38,15 @@ $smarty->display($templateCfg->template_dir . $templateCfg->default_template);
 /**
  * @return object returns the arguments for the page
  */
-function init_args() {
+function init_args()
+{
   $args = new stdClass();
-  $args->tproject_id = isset($_REQUEST['tproject_id']) ? intval($_REQUEST['tproject_id']) : 0;
-  
+  $args->tproject_id = isset($_SESSION['testprojectID']) ? intval($_SESSION['testprojectID']) : 0;
+
+  if( $args->tproject_id == 0 )
+  {
+    $args->tproject_id = isset($_REQUEST['tproject_id']) ? intval($_REQUEST['tproject_id']) : 0;
+  }
   $args->currentUser = $_SESSION['currentUser']; 
   
   $args->user_feedback = array('type' => '', 'message' => '');
@@ -58,9 +64,8 @@ function init_args() {
   return $args;
 }
 
-/**
- *
- */
-function checkRights(&$db,&$user) {
+
+function checkRights(&$db,&$user)
+{
   return $user->hasRight($db,"issuetracker_view") || $user->hasRight($db,"issuetracker_management");
 }

@@ -6,7 +6,7 @@
 # ---------------------------------------------------------------------------------
 
 # Database version
-INSERT INTO /*prefix*/db_version (version,notes,upgrade_ts) VALUES('DB 1.9.20', 'TestLink 1.9.20 Raijin',CURRENT_TIMESTAMP());
+INSERT INTO /*prefix*/db_version (version,notes,upgrade_ts) VALUES('DB 1.9.19', 'TestLink 1.9.19 Metonic cycle',CURRENT_TIMESTAMP());
 
 # Node types -
 INSERT INTO /*prefix*/node_types  (id,description) VALUES (1,'testproject');
@@ -97,10 +97,6 @@ INSERT INTO /*prefix*/rights (id,description) VALUES (51,'codetracker_management
 INSERT INTO /*prefix*/rights (id,description) VALUES (52,'codetracker_view');
 INSERT INTO /*prefix*/rights (id,description) VALUES (53,'cfield_assignment');
 INSERT INTO /*prefix*/rights (id,description) VALUES (54,'exec_assign_testcases');
-
--- since 1.9.20
-INSERT INTO /*prefix*/rights (id,description) VALUES (55,'testproject_add_remove_keywords_executed_tcversions');
-INSERT INTO /*prefix*/rights (id,description) VALUES (56,'delete_frozen_tcversion');
 
 # Rights for Administrator role
 INSERT INTO /*prefix*/role_rights (role_id,right_id) VALUES (8,1 );

@@ -39,9 +39,6 @@ $tlCfg->exec_cfg = new stdClass();
 $tlCfg->exec_cfg->view_mode = new stdClass();
 $tlCfg->exec_cfg->exec_mode = new stdClass();
 
-
-$tlCfg->UDFStripHTMLTags = true;
-
 // allow to define additional execution types other than 
 // defined in testcase.class.php
 // array(code => lblkey)
@@ -70,19 +67,6 @@ $tlCfg->keywords = new stdClass();
 $tlCfg->keywords->onDeleteCheckFrozenTCVersions = TRUE;
 $tlCfg->keywords->onDeleteCheckExecutedTCVersions = TRUE;
 
-// main key testproject PREFIX
-// element array 
-// 'addTCLinkIntoITS' true => add note to Issue Tracker to issue with
-// ISSUE ID similar to the KEYWORD (see kwPrefix below) 
-//                     
-// 'kwPrefix' to remove from keyword to create the ISSUE ID
-//
-$tlCfg->keywords->byTestProject = array();
-
-$tlCfg->keywords->headsUpTSuiteOnExec = 'CMD_OPEN_ON_EXEC';
-
-$tlCfg->accessWithoutLogin = array();
-
 
 /** @uses database access definition (generated automatically by TL installer) */ 
 @include_once('config_db.inc.php');
@@ -102,9 +86,6 @@ $tlCfg->theme_dir = 'gui/themes/default/';
 /** Dir for compiled templates */
 $tlCfg->temp_dir = TL_ABS_PATH . 'gui' . DIRECTORY_SEPARATOR . 
                    'templates_c' . DIRECTORY_SEPARATOR;
-if (($tpltmp = getenv('TESTLINK_TEMPLATES_C'))) {
-  $tlCfg->temp_dir = trim($tpltmp);
-}
 
 /** default filenames of CSS files of current GUI theme */
 define('TL_CSS_MAIN', 'testlink.css');
@@ -121,6 +102,9 @@ define('TL_PRINT_CSS', TL_THEME_CSS_DIR . TL_CSS_PRINT);
 // null or '' => do not use
 $tlCfg->custom_css = null;
 
+// if you do not want to use this, redefine $tlCfg->custom_css as '' or null
+define('TL_TESTLINK_CUSTOM_CSS', TL_THEME_CSS_DIR . $tlCfg->custom_css);
+
 
 /** Include constants and magic numbers (users should not change it)*/
 require_once(TL_ABS_PATH . 'cfg' . DIRECTORY_SEPARATOR . 'const.inc.php');
@@ -135,7 +119,6 @@ $tlCfg->instance_name = 'Main TestLink Instance';
 // do not use blanks or special characters, use a short string
 $tlCfg->instance_id = 'TLM';
 
-$tlCfg->gui->ux = 'tl-classic';
 
 /**
  * Copied from MantisBT
@@ -148,7 +131,8 @@ $tlCfg->gui->ux = 'tl-classic';
  * @see $tlCfg->cookie->path
  * @global string $tlCfg->cookie->prefix
  */
-$tlCfg->cookie->prefix = 'TESTLINK1920';
+$tlCfg->cookie->prefix = 'TESTLINK197';
+
 
 /**
  * @link http://php.net/function.setcookie
@@ -158,9 +142,6 @@ $tlCfg->cookie->expire = (time()+60*60*24*30); // 30 days;
 $tlCfg->cookie->domain = '';
 $tlCfg->cookie->secure = false;
 $tlCfg->cookie->httponly = false;
-
-$tlCfg->cookie->testProjectMemory = $tlCfg->cookie->prefix . 
-                                    '_PROJ_ID_USER_ID_';
 
 /**
  * Copied from MantisBT
@@ -309,9 +290,7 @@ $tlCfg->smarty_debug = false;
  *  put it out of reach via web or configure access denied.
  */
 $tlCfg->log_path = '/var/testlink/logs/'; /* unix example */
-if (($lp = getenv('TESTLINK_LOG_PATH'))) {
-  $tlCfg->log_path = trim($lp);
-}
+
 
 /**
  * @var string How to warning user when security weak points exists.
@@ -321,7 +300,7 @@ if (($lp = getenv('TESTLINK_LOG_PATH'))) {
  *         user will receive a message on screen. (default)
  * 'SILENT': same that FILE, but user will not receive message on screen.
  */
-$tlCfg->config_check_warning_mode = 'SILENT';
+$tlCfg->config_check_warning_mode = 'FILE';
 
 /**
  * ONCE_FOR_SESSION
@@ -429,8 +408,8 @@ $tlCfg->authentication['domain'] = array('DB' => array('description' => 'DB', 'a
                      'LDAP' => array('description' => 'LDAP', 'allowPasswordManagement' => false) );
 
 /* Default Authentication method */
-// $tlCfg->authentication['method'] = 'DB';
-$tlCfg->authentication['method'] = 'LDAP';
+$tlCfg->authentication['method'] = 'DB';
+
 // Applies only if authentication methos is DB.
 // Used when:
 // 1. user sign up
@@ -468,6 +447,7 @@ $tlCfg->OAuthServers = array();
 // $tlCfg->OAuthServers[1]['oauth_name'] = 'google';
 
 // Get from /gui/themes/default/images
+// $tlCfg->OAuthServers[1]['oauth_icon'] = 'google.png'; 
 // $tlCfg->OAuthServers[1]['oauth_client_id'] = 'CLIENT_ID';
 // $tlCfg->OAuthServers[1]['oauth_client_secret'] = 'CLIENT_SECRET';
 // Can be authorization_code (by default), client_credentials or password
@@ -484,6 +464,7 @@ $tlCfg->OAuthServers = array();
 // Github
 // $tlCfg->OAuthServers[2]['oauth_enabled'] = true;
 // $tlCfg->OAuthServers[2]['oauth_name'] = 'github';
+// $tlCfg->OAuthServers[2]['oauth_icon'] = 'github.png'; //Get from /gui/themes/default/images
 // $tlCfg->OAuthServers[2]['oauth_client_id'] = 'CLIENT_ID';
 // $tlCfg->OAuthServers[2]['oauth_client_secret'] = 'CLIENT_SECRET';
 
@@ -497,45 +478,6 @@ $tlCfg->OAuthServers = array();
 // $tlCfg->OAuthServers[2]['oauth_profile'] = 'https://api.github.com/user';
 // $tlCfg->OAuthServers[2]['oauth_scope'] = 'user:email';
 
-//Microsoft
-//$tlCfg->OAuthServers[1]['oauth_enabled'] = true;
-//$tlCfg->OAuthServers[1]['oauth_name'] = 'microsoft';
-//$tlCfg->OAuthServers[1]['oauth_client_id'] = 'CLIENT_ID';
-//$tlCfg->OAuthServers[1]['oauth_client_secret'] = 'CLIENT_SECRET';
-
-// Can be authorization_code (by default), client_credentials or password
-//$tlCfg->OAuthServers[1]['oauth_grant_type'] = 'authorization_code';
-//$tlCfg->OAuthServers[1]['oauth_url'] = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
-
-//$tlCfg->OAuthServers[1]['token_url'] = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
-//$tlCfg->OAuthServers[1]['oauth_force_single'] = true;
-//$tlCfg->OAuthServers[1]['oauth_profile'] = 'https://graph.microsoft.com/v1.0/me';
-//$tlCfg->OAuthServers[1]['oauth_scope'] = 'User.Read';
-
-//$tlCfg->OAuthServers[1]['redirect_uri'] = 'TESTLINKURL/microsoftoauth.php';
-
-
-// Azure AD 
-// Fill in CLIENT_ID,CLIENT_SECRET,YOURTESTLINKSERVER and TENANTID with your information
-// See this article for registering an application: https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-oauth-code
-// Make sure, you grant admint consent for it: https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent
-
-// $tlCfg->OAuthServers[1]['oauth_enabled'] = true;
-// $tlCfg->OAuthServers[1]['oauth_name'] = 'azuread'; //do not change this
-
-// $tlCfg->OAuthServers[1]['oauth_client_id'] = 'CLIENT_ID';
-// $tlCfg->OAuthServers[1]['oauth_client_secret'] = 'CLIENT_SECRET';
-// $tlCfg->OAuthServers[1]['redirect_uri'] = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . '/login.php';
-
-// $tlCfg->OAuthServers[1]['oauth_force_single'] = true; 
-
-// $tlCfg->OAuthServers[1]['oauth_grant_type'] = 'authorization_code';  
-// $tlCfg->OAuthServers[1]['oauth_url'] = 'https://login.microsoftonline.com/TENANTID/oauth2/authorize';
-// $tlCfg->OAuthServers[1]['token_url'] = 'https://login.microsoftonline.com/TENANTID/oauth2/token';
-// the domain you want to whitelist (email domains)
-// $tlCfg->OAuthServers[1]['oauth_domain'] = 'autsoft.hu'; 
-// $tlCfg->OAuthServers[1]['oauth_profile'] = 'https://login.microsoftonline.com/TENANTID/openid/userinfo';
-// $tlCfg->OAuthServers[1]['oauth_scope'] = 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/user.read openid profile email';
 
 /**
  * Single Sign On authentication
@@ -562,7 +504,23 @@ $tlCfg->authentication['SSO_logout_destination'] = 'YOUR LOGOUT DESTINATION';
  * till authentication succeed or all servers have been used.
  */
 $tlCfg->authentication['ldap'] = array();
+$tlCfg->authentication['ldap'][1]['ldap_server'] = 'localhost';
+$tlCfg->authentication['ldap'][1]['ldap_port'] = '389';
+$tlCfg->authentication['ldap'][1]['ldap_version'] = '3'; // could be '2' in some cases
+$tlCfg->authentication['ldap'][1]['ldap_root_dn'] = 'dc=mycompany,dc=com';
+$tlCfg->authentication['ldap'][1]['ldap_bind_dn'] = ''; // Left empty for anonymous LDAP binding
+$tlCfg->authentication['ldap'][1]['ldap_bind_passwd'] = ''; // Left empty for anonymous LDAP binding
+$tlCfg->authentication['ldap'][1]['ldap_tls'] = false; // true -> use tls
 
+// Following configuration parameters are used to build 
+// ldap filter and ldap attributes used by ldap_search()
+//
+// filter => "(&$t_ldap_organization($t_ldap_uid_field=$t_username))";
+// attributess => array( $t_ldap_uid_field, 'dn' );
+// 
+// This can be used to manage situation like explained on post on forum:
+// ActiveDirectory + users in AD group
+// 
 $tlCfg->authentication['ldap'][1]['ldap_organization'] = ''; // e.g. '(organizationname=*Traffic)'
 $tlCfg->authentication['ldap'][1]['ldap_uid_field'] = 'uid'; // Use 'sAMAccountName' for Active Directory
 
@@ -888,8 +846,6 @@ $tlCfg->reportsCfg->start_date_offset = (7*24*60*60); // one week
 $tlCfg->reportsCfg->start_time = '00:00';
 
 // Result matrix (resultsTC.php)
-$tlCfg->resultMatrixReport = new stdClass();
-
 // Shows an extra column with the result of the latest execution on
 // the lastest CREATED build
 $tlCfg->resultMatrixReport->buildColumns['showExecutionResultLatestCreatedBuild'] = true;
@@ -952,8 +908,6 @@ $tlCfg->document_generator->tc_version_enabled = TRUE;
 // ----------------------------------------------------------------------------
 /* [Test Executions] */
 
-// $tlCfg->exec_cfg->enable_test_automation = DISABLED;
-
 // ENABLED -> enable XML-RPC calls to external test automation server
 //            new buttons will be displayed on execution pages
 // DISABLED -> disable
@@ -984,31 +938,6 @@ $tlCfg->exec_cfg->show_history_all_platforms = FALSE;
 // $att_model_m1 ->  shows upload button and title
 // $att_model_m2 ->  hides upload button and title
 $tlCfg->exec_cfg->att_model = $att_model_m2;   //defined in const.inc.php
-
-// IVU
-// Default Value
-// USE_LATEST_EXEC_ON_CONTEX_FOR_COUNTERS
-// USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS
-// USE_LATEST_EXEC_ON_TESTPLAN_PLAT_FOR_COUNTERS
-$tlCfg->exec_cfg->tcases_counters_mode = array();
-$tlCfg->exec_cfg->tcases_counters_mode['with_platforms'] =
-  USE_LATEST_EXEC_ON_CONTEX_FOR_COUNTERS;
-
-$tlCfg->exec_cfg->tcases_counters_mode['without_platforms'] =
-  USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS;
-
-
-$tlCfg->exec_cfg->tcases_counters_mode_domain = array();
-$tlCfg->exec_cfg->tcases_counters_mode_domain['with_platforms'] =
-  array('USE_LATEST_EXEC_ON_CONTEX_FOR_COUNTERS',
-        'USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS',
-        'USE_LATEST_EXEC_ON_TESTPLAN_PLAT_FOR_COUNTERS'); 
-
-$tlCfg->exec_cfg->tcases_counters_mode_domain['without_platforms'] =
-  array('USE_LATEST_EXEC_ON_CONTEX_FOR_COUNTERS',
-        'USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS'); 
-
-
 
 
 // ENABLED -> test cases will be coloured according to test case status
@@ -1086,10 +1015,11 @@ $tlCfg->exec_cfg->exec_mode->new_exec='clean';
 // save_and_move = 'unlimited'
 $tlCfg->exec_cfg->exec_mode->save_and_move='unlimited';
 
+/**
+ * @since 1.9.17
+ *
+ */
 $tlCfg->exec_cfg->exec_mode->addLinkToTLChecked = false;
-$tlCfg->exec_cfg->exec_mode->addLinkToTLPrintViewChecked = false;
-$tlCfg->exec_cfg->exec_mode->assignTaskChecked = false;
-
 
 /** User filter in Test Execution navigator - default value */
 // logged_user -> combo will be set to logged user
@@ -1183,7 +1113,9 @@ $tlCfg->exec_cfg->issues->tcstep_level->subject =
 $tlCfg->exec_cfg->issues->tcstep_level->subject = '$$issue_on_step %%STEPNUMBER%% - $$issue_subject_tcname %%TCNAME%% ';
 
 
-// ----------------------------------------------------------------------
+
+
+// ----------------------------------------------------------------------------
 /* [Test Specification] */
 
 // TRUE will be displayed when displayed a test case
@@ -1322,25 +1254,10 @@ $tlCfg->testcase_cfg->addTCVRelationsOnlyOnLatestTCVersion = TRUE;
 //$tlCfg->testcase_cfg->frozenNotExecutedTCVDelREQVLink = FALSE;
 
 
+
+
 // Effects on Req Version to TCVersion LINK 
 // when a new version of a linked Test Case is created
-// If LINK is frozen, then this means that link can not be deleted.
-// $tlCfg->reqTCLinks->freezeLinkOnNewTCVersion = FALSE;
-//
-// Important Notice:
-// Req Version to TCVersion Link can be done ONLY TO LATEST TCV.
-// 
-// This means that :
-// 
-// on GUI on the Requirements Area on TEST CASE Specification Feature:
-// this option has NO EFFECT 
-//
-// on GUI on the Coverage Area on REQUIREMENT Specification Feature:
-// this option has EFFECT
-//
-// on GUI on the Assign Requirements Feature:
-// this option has EFFECT
-//
 $tlCfg->reqTCLinks->freezeLinkOnNewTCVersion = TRUE;
 
 // Effects on Req Version to TCVersion LINK 
@@ -1359,6 +1276,8 @@ $tlCfg->reqTCLinks->freezeBothEndsOnNewREQVersion = TRUE;
 
 // Effects on REQ Version N when REQ Version N+1 is created 
 $tlCfg->req_cfg->freezeREQVersionOnNewREQVersion = TRUE;
+
+
 
 
 /** text template for a new items:
@@ -1454,53 +1373,37 @@ $tlCfg->platform_template->notes->value = '';
 /* [ATTACHMENTS] */
 
 /** Attachment feature availability */
-$tlCfg->attachments = new stdClass();
-$tlCfg->attachments->enabled = TRUE;
+$g_attachments = new stdClass();
+$g_attachments->enabled = TRUE;
 
 // TRUE -> when you upload a file you can give no title
-$tlCfg->attachments->allow_empty_title = TRUE;
+$g_attachments->allow_empty_title = TRUE;
 
-// $tlCfg->attachments->allow_empty_title == TRUE, you can ask the system
+// $g_attachments->allow_empty_title == TRUE, you can ask the system
 // to do something
 //
 // 'none'         -> just write on db an empty title
 // 'use_filename' -> use filename as title
-//$tlCfg->attachments->action_on_save_empty_title='use_filename';
+//$g_attachments->action_on_save_empty_title='use_filename';
 //
-$tlCfg->attachments->action_on_save_empty_title = 'none';
+$g_attachments->action_on_save_empty_title = 'none';
 
 // Remember that title is used as link description for download
 // then if title is empty, what the system has to do when displaying ?
-// 'show_icon'  -> the $tlCfg->attachments->access_icon will be used.
-// 'show_label' -> the value of $tlCfg->attachments->access_string will be used .
-$tlCfg->attachments->action_on_display_empty_title = 'show_icon';
+// 'show_icon'  -> the $g_attachments->access_icon will be used.
+// 'show_label' -> the value of $g_attachments->access_string will be used .
+$g_attachments->action_on_display_empty_title = 'show_icon';
 
 // Set display order of uploaded files 
-$tlCfg->attachments->order_by = " ORDER BY date_added DESC ";
+$g_attachments->order_by = " ORDER BY date_added DESC ";
 
 
 // need to be moved AFTER include of custom_config
 //
-// $tlCfg->attachments->access_icon = '<img src="' . $tlCfg->theme_dir . 'images/new_f2_16.png" style="border:none" />';
-$tlCfg->attachments->access_string = "[*]";
-
-/**
- * Files that are allowed.  Separate items by commas.
- * eg. 'doc,xls,gif,png,jpg'
- */
-$tlCfg->attachments->allowed_files = 'doc,xls,gif,png,jpg,xlsx,csv';
+// $g_attachments->access_icon = '<img src="' . $tlCfg->theme_dir . 'images/new_f2_16.png" style="border:none" />';
+$g_attachments->access_string = "[*]";
 
 
-/**
- * Process filename against XSS
- * Thanks to http://owasp.org/index.php/Unrestricted_File_Upload
- *   '/^[a-zA-Z0-9]{1,20}\.[a-zA-Z0-9]{1,10}$/'; 
- *   added - and _.
- * 
- * NO CHECK if -> $g_attachments->allowed_filenames_regexp = '';
- *
- */
-$tlCfg->attachments->allowed_filenames_regexp = '/^[a-zA-Z0-9_-]{1,20}\.[a-zA-Z0-9]{1,10}$/';
 
 
 /** the type of the repository can be database or filesystem
@@ -1517,9 +1420,6 @@ $g_repositoryType = TL_REPOSITORY_TYPE_FS;
  *
  **/
 $g_repositoryPath = '/var/testlink/upload_area/';  /* unix example */
-if (($upa = getenv('TESTLINK_UPLOAD_AREA'))) {
-  $g_repositoryPath = trim($upa);
-}
 
 /**
  * compression used within the repository
@@ -1811,8 +1711,6 @@ $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_tc_id = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_testcase_name = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_toplevel_testsuite = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_keywords = ENABLED;
-$tlCfg->tree_filter_cfg->testcases->edit_mode->filter_platforms = ENABLED;
-
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_active_inactive = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_importance = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->edit_mode->filter_execution_type = ENABLED;
@@ -1847,8 +1745,6 @@ $tlCfg->tree_filter_cfg->testcases->plan_add_mode->filter_execution_type = ENABL
 $tlCfg->tree_filter_cfg->testcases->plan_add_mode->filter_workflow_status = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->plan_add_mode->filter_custom_fields = ENABLED;
 $tlCfg->tree_filter_cfg->testcases->plan_add_mode->advanced_filter_mode_choice = ENABLED;
-$tlCfg->tree_filter_cfg->testcases->plan_add_mode->filter_platforms = ENABLED;
-
 
 $tlCfg->tree_filter_cfg->requirements->filter_doc_id = ENABLED;
 $tlCfg->tree_filter_cfg->requirements->filter_title = ENABLED;
@@ -1992,11 +1888,10 @@ $tlCfg->enableTableExportButton = DISABLED;
 
 
 /**
- * Taken from Mantis to implement better login security
- * and solve TICKET 4342.
+ * Taken from Mantis to implement better login security, and solve
+ * TICKET 4342
  */
-$tlCfg->auth_cookie = $tlCfg->cookie->prefix . 
-                      "TESTLINK_USER_AUTH_COOKIE";
+$tlCfg->auth_cookie = "TESTLINK_USER_AUTH_COOKIE";
 
 /** 
 Used when creating a Test Suite using copy
@@ -2017,7 +1912,7 @@ $g_prefix_name_for_copy = strftime("%Y%m%d-%H:%M:%S", time());
  */
 $g_tpl = array('inc_exec_controls' => 'inc_exec_img_controls.tpl');
 //$g_tpl = array('inc_exec_controls' => 'inc_exec_controls.tpl');
-$g_tpl['login'] = 'login/login-model-marcobiedermann.tpl'; 
+ 
 
 // Example 
 // $g_tpl = array('tcView'  => 'custom_tcView.tpl',
@@ -2075,10 +1970,9 @@ if ( file_exists( TL_ABS_PATH . 'custom_config.inc.php' ) )
 }
 
 
-if( !isset($tlCfg->attachments->access_icon) ) {
-  $tlCfg->attachments->access_icon = 
-    '<img src="' . $tlCfg->theme_dir . 
-    'images/new_f2_16.png" style="border:none" />';
+if( !isset($g_attachments->access_icon) )
+{
+  $g_attachments->access_icon = '<img src="' . $tlCfg->theme_dir . 'images/new_f2_16.png" style="border:none" />';
 }
 
 

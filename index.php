@@ -23,13 +23,15 @@ list($args,$gui) = initEnv();
 
 // verify the session during a work
 $redir2login = true;
-if( isset($_SESSION['currentUser']) ) {
+if( isset($_SESSION['currentUser']) )
+{
   // Session exists we need to do other checks.
   // we use/copy Mantisbt approach
   $securityCookie = tlUser::auth_get_current_user_cookie();
   $redir2login = is_null($securityCookie);
 
-  if(!$redir2login) {
+  if(!$redir2login)
+  {
     // need to get fresh info from db, before asking for securityCookie
     doDBConnect($db,database::ONERROREXIT);
     $user = new tlUser();
@@ -40,7 +42,8 @@ if( isset($_SESSION['currentUser']) ) {
   } 
 }
 
-if($redir2login) {
+if($redir2login)
+{
   // destroy user in session as security measure
   unset($_SESSION['currentUser']);
 
@@ -74,35 +77,14 @@ $tplEngine->display('main.tpl');
  *
  *
  */
-function initEnv() {
+function initEnv()
+{
   $iParams = array("reqURI" => array(tlInputParameter::STRING_N,0,4000));
   $pParams = G_PARAMS($iParams);
   
   $args = new stdClass();
   $args->ssodisable = getSSODisable();
-
-  // CWE-79: 
-  // Improper Neutralization of Input 
-  // During Web Page Generation ('Cross-site Scripting')
-  // 
-  // https://cxsecurity.com/issue/WLB-2019110139
-  $args->reqURI = '';
-  if ($pParams["reqURI"] != '') {
-    $args->reqURI = $pParams["reqURI"];
-
-    // some sanity checks
-    // strpos ( string $haystack , mixed $needle
-    if (stripos($args->reqURI,'javascript') !== false) {
-      $args->reqURI = null; 
-    }
-  }
-  if (null == $args->reqURI) {
-    $args->reqURI = 'lib/general/mainPage.php';
-  }
-  $args->reqURI = $_SESSION['basehref'] . $args->reqURI;
-
-
-
+  $args->reqURI = ($pParams["reqURI"] != '') ? $pParams["reqURI"] : 'lib/general/mainPage.php';
   $args->tproject_id = isset($_REQUEST['tproject_id']) ? intval($_REQUEST['tproject_id']) : 0;
   $args->tplan_id = isset($_REQUEST['tplan_id']) ? intval($_REQUEST['tplan_id']) : 0;
 

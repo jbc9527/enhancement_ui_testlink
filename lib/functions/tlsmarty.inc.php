@@ -9,7 +9,7 @@
  * @filesource	tlsmarty.inc.php
  * @package 	  TestLink
  * @author 		  Martin Havlat
- * @copyright 	2005-2020, TestLink community 
+ * @copyright 	2005-2018, TestLink community 
  * @link 		    http://www.testlink.org/
  * @link 		    http://www.smarty.net/ 
  *
@@ -89,16 +89,10 @@ class TLSmarty extends Smarty {
     global $g_tpl;
     
     parent::__construct();
-  
-    $this->template_dir = 
-      array('main' => TL_ABS_PATH . 'gui/templates/' . 
-                      $tlCfg->gui->ux . '/');
-                          
-    $this->config_dir = TL_ABS_PATH . 'gui/templates/conf';
+    $this->template_dir = TL_ABS_PATH . 'gui/templates/';
     $this->compile_dir = TL_TEMP_PATH;
+    $this->config_dir = TL_ABS_PATH . 'gui/templates/';
     
-
-
     $testproject_coloring = $tlCfg->gui->testproject_coloring;
     $testprojectColor = $tlCfg->gui->background_color ; 
     
@@ -160,8 +154,7 @@ class TLSmarty extends Smarty {
     $this->assign('use_custom_css', 0);
     if(!is_null($tlCfg->custom_css) && $tlCfg->custom_css != '') {
       $this->assign('use_custom_css', 1);
-      $this->assign('custom_css', 
-        $basehref . TL_THEME_CSS_DIR . $tlCfg->custom_css);
+      $this->assign('custom_css', $basehref . TL_TESTLINK_CUSTOM_CSS);
     }
     
     $this->assign('locale', $my_locale);
@@ -183,9 +176,6 @@ class TLSmarty extends Smarty {
 
     $stdTPLCfg['steps_horizontal.inc'] = 'testcases/steps_horizontal.inc.tpl';
     $stdTPLCfg['steps_vertical.inc'] = 'testcases/steps_vertical.inc.tpl';
-
-    $stdTPLCfg['platforms.inc'] = 'testcases/platforms.inc.tpl';
-
 
     // -----------------------------------------------------------------------------
     // load configuration
@@ -240,15 +230,11 @@ class TLSmarty extends Smarty {
     $this->assign('result', null);
     
     // $this->assign('optLocale',config_get('locales'));
+    
     $this->assign('gsmarty_href_keywordsView',
     			        ' "lib/keywords/keywordsView.php?tproject_id=%s%" ' . ' target="mainframe" class="bold" ' .
     			        ' title="' . lang_get('menu_manage_keywords') . '"');
     
-
-    $this->assign('gsmarty_href_platformsView',
-                  ' "lib/platforms/platformsView.php?tproject_id=%s%" ' . ' target="mainframe" class="bold" ' .
-                  ' title="' . lang_get('menu_manage_platforms') . '"');
-
     $this->assign('gsmarty_html_select_date_field_order',
                   $tlCfg->locales_html_select_date_field_order[$my_locale]);
                   
@@ -350,7 +336,6 @@ class TLSmarty extends Smarty {
                    'check_ok' => $imgLoc . 'lightbulb.png',
                    'check_ko' => $imgLoc . 'link_error.png',
                    'cog'  => $imgLoc . 'cog.png',
-                   'copy_attachments'  => $imgLoc . 'folder_add.png',
                    'create_copy' => $imgLoc . 'application_double.png',
                    'create_from_xml' => $imgLoc . 'wand.png',
                    'date' => $imgLoc . 'date.png',
@@ -377,7 +362,6 @@ class TLSmarty extends Smarty {
                    'exec_blocked' => $imgLoc . 'emoticon_surprised.png',
                    'execution' => $imgLoc . 'controller.png',
                    'execution_order' => $imgLoc . 'timeline_marker.png',
-                   'execution_duration' => $imgLoc . 'hourglass.png',
                    'export_excel' => $imgLoc . 'page_excel.png',
                    'export_for_results_import' => $imgLoc . 'brick_go.png',
                    'ghost_item' => $imgLoc . 'ghost16x16.png',
@@ -418,7 +402,6 @@ class TLSmarty extends Smarty {
                    'requirements' => $imgLoc . 'cart.png',
                    'resequence' => $imgLoc . 'control_equalizer.png',
                    'reset' => $imgLoc . 'arrow_undo.png',
-                   'saveForBaseline' => $imgLoc . 'lock.png',
                    'summary_small' => $imgLoc . 'information_small.png',
                    'sort' => $imgLoc . 'sort_hint.png',
                    'steps' => $imgLoc . 'bricks.png',
@@ -439,11 +422,11 @@ class TLSmarty extends Smarty {
                    'test_status_blocked' => $imgLoc . 'test_status_blocked.png',
                    'test_status_passed_next' => $imgLoc . 'test_status_passed_next.png',
                    'test_status_failed_next' => $imgLoc . 'test_status_failed_next.png',
-                   'test_status_blocked_next' => $imgLoc . 'test_status_blocked_next.png',
-                   'keyword_add' => $imgLoc . 'tag_blue_add.png');
+                   'test_status_blocked_next' => $imgLoc . 'test_status_blocked_next.png');
 
     $imi = config_get('images');
-    if(count($imi) >0) {
+    if(count($imi) >0)
+    {
       $dummy = array_merge($dummy,$imi);
     }                 
     return $dummy;

@@ -14,17 +14,16 @@ $gui = new stdClass();
 $templateCfg = templateConfiguration();
 
 $cfield_mgr = new cfield_mgr($db);
-$gui = $cfield_mgr->initViewGUI();
+$gui->cf_map = $cfield_mgr->get_all(null,'transform');
+$gui->cf_types = $cfield_mgr->get_available_types();
+
+// MAGIC 10
+$gui->drawControlsOnTop = (null != $gui->cf_map && count($gui->cf_map) > 10); 
 
 $smarty = new TLSmarty();
 $smarty->assign('gui',$gui);
 $smarty->display($templateCfg->template_dir . $templateCfg->default_template);
 
-
-/**
- *
- */
 function checkRights(&$db,&$user) {
   return $user->hasRight($db,"cfield_management") || $user->hasRight($db,"cfield_view");
 }
-

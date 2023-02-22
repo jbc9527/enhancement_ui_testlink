@@ -13,9 +13,11 @@
  *
  * @package TestLink
  * @author TestLink Community
- * @copyright 2012,2019 TestLink community
+ * @copyright 2012,2015 TestLink community
  * @link http://www.testlink.org
  *
+ * @internal revisions
+ * @since 1.9.15
  **/
 
 // ATTENTION/CRITIC
@@ -148,14 +150,10 @@ function csrfguard_replace_forms($form_data_html)
       }
       $name="CSRFGuard_".mt_rand(0,mt_getrandmax());
       $token= csrfguard_generate_token($name);
-
-      // because you can have multiple forms in a HTML page
-      // is not possible to add a fixed ID. 
-      // 
       $form_data_html=str_replace($m[0],
                       "<form{$m[1]}>
-                       <input type='hidden' name='CSRFName' value='{$name}' />
-                       <input type='hidden' name='CSRFToken' value='{$token}' />{$m[2]}</form>",$form_data_html);
+                       <input type='hidden' name='CSRFName' id='CSRFName' value='{$name}' />
+                       <input type='hidden' name='CSRFToken' id='CSRFToken' value='{$token}' />{$m[2]}</form>",$form_data_html);
     }
   }
   return $form_data_html;
@@ -187,10 +185,11 @@ function csrfguard_start()
     {
       //trigger_error("No CSRFName found, probable invalid request.",E_USER_ERROR);
       //return false;
-      redirect($_SESSION['basehref'] . 'error.php?code=1');
+      redirect($_SESSION['basehref'] . 'error.php?message=No CSRFName found, probable invalid request.');
       exit();
     }
 
+    // 20151107 
     $name = trim($_POST['CSRFName']);
     $token = trim($_POST['CSRFToken']);
     $good = (strlen($name) > 0 && strlen($token) > 0);
@@ -199,7 +198,7 @@ function csrfguard_start()
     {
       //trigger_error("Invalid CSRF token.",E_USER_ERROR);
       //return false;
-      redirect($_SESSION['basehref'] . 'error.php?code=2');
+      redirect($_SESSION['basehref'] . 'error.php?message=Invalid CSRF token.');
       exit();
     }
   }

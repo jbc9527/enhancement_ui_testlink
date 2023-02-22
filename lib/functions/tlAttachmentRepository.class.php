@@ -5,7 +5,7 @@
  *
  * @package     TestLink
  * @author      Andreas Morsing
- * @copyright   2007-2019, TestLink community 
+ * @copyright   2007-2018, TestLink community 
  * @filesource  tlAttachmentRepository.class.php
  * @link        http://www.testlink.org/index.php
  *
@@ -118,72 +118,49 @@ class tlAttachmentRepository extends tlObjectWithDB
   **/
   public function insertAttachment($fkid,$fkTableName,$title,$fInfo,$opt=null)
   {
-    $op = new stdClass();
-    $op->statusOK = false;
-    $op->msg = '';
-    $op->statusCode = 0;
-
     $fName = isset($fInfo['name']) ? $fInfo['name'] : null;
     $fType = isset($fInfo['type']) ? $fInfo['type'] : '';
     $fSize = isset($fInfo['size']) ? $fInfo['size'] : 0;
     $fTmpName = isset($fInfo['tmp_name']) ? $fInfo['tmp_name'] : '';
 
-    if (null == $fName || '' == $fType || 0 == $fSize) {
-      $op->statusCode = 'fNameORfTypeOrfSize';
-      return $op;
-    }
-
-    // Process filename against XSS
-    // Thanks to http://owasp.org/index.php/Unrestricted_File_Upload
-    $pattern = trim($this->attachmentCfg->allowed_filenames_regexp);
-    if( '' != $pattern && !preg_match($pattern,$fName) ){
-      $op->statusCode = 'allowed_filenames_regexp';
-      $op->msg = lang_get('FILE_UPLOAD_' . $op->statusCode);
-      return $op; 
-    }
-    
-    $fExt = getFileExtension($fName,"");
-    if( '' == $fExt ) {
-      $op->msg = 'empty extension -> failed';
-      $op->statusCode = 'empty_extension';
-      return $op; 
-    }
-
-    $allowed = explode(',',$this->attachmentCfg->allowed_files);
-    if (!in_array($fExt, $allowed)) {
-      $op->statusCode = 'allowed_files';
-      $op->msg = lang_get('FILE_UPLOAD_' . $op->statusCode);
-      return $op; 
-    }
-
-    // Go ahead
     $fContents = null;
+
+    $fExt = getFileExtension(isset($fInfo['name']) ? ($fInfo['name']) : '',"bin");
     $destFPath = null;
     $destFName = getUniqueFileName($fExt);
 
-    if ($this->repositoryType == TL_REPOSITORY_TYPE_FS) {
+    if ($this->repositoryType == TL_REPOSITORY_TYPE_FS)
+    {
       $destFPath = $this->buildRepositoryFilePath($destFName,$fkTableName,$fkid);
-      $op->statusOK = $this->storeFileInFSRepository($fTmpName,$destFPath);
-    } else {
+      $fileUploaded = $this->storeFileInFSRepository($fTmpName,$destFPath);
+    }
+    else
+    {
       $fContents = $this->getFileContentsForDBRepository($fTmpName,$destFName);
-      $op->statusOK = sizeof($fContents);
-      if($op->statusOK) {
-        @unlink($fTmpName); 
+      $fileUploaded = sizeof($fContents);
+      if($fileUploaded)
+      {
+          @unlink($fTmpName); 
       } 
     }
 
-    if ($op->statusOK) {
-      $op->statusOK = 
-        ($this->attmObj->create($fkid,$fkTableName,$fName,$destFPath,$fContents,$fType,$fSize,$title,$opt) >= tl::OK);
+    if ($fileUploaded)
+    {
+      $fileUploaded = 
+      ($this->attmObj->create($fkid,$fkTableName,$fName,$destFPath,$fContents,
+                              $fType,$fSize,$title,$opt) >= tl::OK);
       
-      if ($op->statusOK) {
-        $op->statusOK = $this->attmObj->writeToDb($this->db);
-      } else { 
+      if ($fileUploaded)
+      {
+        $fileUploaded = $this->attmObj->writeToDb($this->db);
+      }
+      else
+      { 
         @unlink($destFPath);
       }
     }
 
-    return $op;
+    return $fileUploaded;
   }
 
   /**

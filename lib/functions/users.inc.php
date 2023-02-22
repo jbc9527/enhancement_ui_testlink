@@ -8,9 +8,11 @@
  * @filesource  users.inc.php
  * @package     TestLink
  * @author      Martin Havlat
- * @copyright   2006-2020, TestLink community 
+ * @copyright   2006-2015, TestLink community 
  * @link        http://www.testlink.org
  *
+ * @internal revisions
+ * @since 1.9.16
  */
 require_once("common.php");
 
@@ -28,6 +30,8 @@ require_once("common.php");
  * 
  * @return integer status code
  * 
+ * @TODO havlatm: move to tlSession class
+ * @TODO fix return functionality
  **/
 function setUserSession(&$db,$user, $id, $roleID, $email, $locale = null, $active = null)
 {
@@ -37,7 +41,8 @@ function setUserSession(&$db,$user, $id, $roleID, $email, $locale = null, $activ
   $_SESSION['testprojectID'] = null;
   $_SESSION['s_lastAttachmentList'] = null;
 
-  if (!is_null($locale)) {
+  if (!is_null($locale))
+  {
     $_SESSION['locale'] = $locale;
     setDateTimeFormats($locale);
   }
@@ -48,15 +53,17 @@ function setUserSession(&$db,$user, $id, $roleID, $email, $locale = null, $activ
   $opt = array('output' => 'map_name_with_inactive_mark', 'order_by' => $gui_cfg->tprojects_combo_order_by);
   $arrProducts = $tproject_mgr->get_accessible_for_user($id,$opt);
 
-  $tproject_cookie = config_get('cookie')->testProjectMemory . $id;
-  if (isset($_COOKIE[$tproject_cookie])) {
-    if (isset($arrProducts[$_COOKIE[$tproject_cookie]]) 
-        && $arrProducts[$_COOKIE[$tproject_cookie]]) {
+  $tproject_cookie = 'TL_lastTestProjectForUserID_'. $id;
+  if (isset($_COOKIE[$tproject_cookie]))
+  {
+    if (isset($arrProducts[$_COOKIE[$tproject_cookie]]) && $arrProducts[$_COOKIE[$tproject_cookie]])
+    {
       $_SESSION['testprojectID'] = $_COOKIE[$tproject_cookie];
       tLog('Cookie: {$tproject_cookie}='.$_SESSION['testprojectID']);
     }
   }
-  if (!$_SESSION['testprojectID']) {
+  if (!$_SESSION['testprojectID'])
+  {
       $tpID = null;
       if (sizeof($arrProducts))
       {
@@ -454,14 +461,4 @@ function getGrantsForUserMgmt(&$dbHandler,&$userObj,$tprojectID=null,$tplanID=nu
   }
     
   return $grants;
-}
-
-
-/** 
- * just a wrapper
- *
- */
-function setUserSessionFromObj(&$db,$userObj) {
-  return setUserSession($db,$userObj->login,$userObj->dbID,
-                        $userObj->globalRoleID,$userObj->emailAddress);
 }

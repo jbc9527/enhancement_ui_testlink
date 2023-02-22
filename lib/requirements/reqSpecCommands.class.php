@@ -6,6 +6,8 @@
  * @filesource  reqSpecCommands.class.php
  * @author      Francisco Mancardi
  * 
+ * @internal revisions
+ * @since 1.9.15
  *
  */
 class reqSpecCommands
@@ -453,7 +455,7 @@ class reqSpecCommands
     $obj = $this->copyRequirements($argsObj, array( 'get_items' => false));
     $obj->req = null;
     $obj->req_spec_id = $argsObj->req_spec_id;
-    $obj->array_of_msg = array();
+    $obj->array_of_msg = '';
        
     $copyOptions = array('copy_also' => array('testcase_assignment' => $argsObj->copy_testcase_assignment));
         
@@ -552,7 +554,7 @@ class reqSpecCommands
     $obj->template = 'reqSpecCopy.tpl';
     $obj->containers = null;
     $obj->page2call = 'lib/requirements/reqSpecEdit.php';
-    $obj->array_of_msg = array();
+    $obj->array_of_msg = '';
     $obj->doActionButton = 'doCopy';
     $obj->req_spec_id = $argsObj->req_spec_id;
     $obj->top_checked = ' checked = "checked" ';
@@ -812,7 +814,7 @@ class reqSpecCommands
    */
   function fileUpload(&$argsObj,$request)
   {
-    $argsObj->uploadOp = fileUploadManagement($this->db,$argsObj->req_spec_id,$argsObj->fileTitle,$this->reqSpecMgr->getAttachmentTableName());
+    fileUploadManagement($this->db,$argsObj->req_spec_id,$argsObj->fileTitle,$this->reqSpecMgr->getAttachmentTableName());
     return $this->initGuiObjForAttachmentOperations($argsObj);
   }
 
@@ -838,9 +840,6 @@ class reqSpecCommands
     $guiObj->action_status_ok = true;
     $guiObj->req_spec_id = $argsObj->req_spec_id;
     $guiObj->template = "reqSpecView.php?refreshTree=0&req_spec_id={$argsObj->req_spec_id}";
-
-    $guiObj->uploadOp = $argsObj->uploadOp;
-
     return $guiObj;    
   }
 

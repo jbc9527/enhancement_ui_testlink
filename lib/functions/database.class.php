@@ -209,7 +209,7 @@ class database {
         echo "<pre>"; debug_print_backtrace(); echo "</pre>";
         die();
       }   
-      echo "<pre>"; debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS); echo "</pre>";
+      echo "<pre>"; debug_print_backtrace(); echo "</pre>";
         die();
       
       //else
@@ -620,15 +620,11 @@ class database {
    *                 X      B     Z
    *                 Y      B     0
    *
-   *        cumulative=0 -> 
-   *        return items= array('X' => array('A','C'), 'Y' => array('B','0') )
+   *        cumulative=0 -> return items= array('X' => array('A','C'), 'Y' => array('B','0') )
    *
-   *        cumulative=1 -> 
-   *        return items= 
-   *                      array('X' => 
-   *                                   array( 0 => array('A','C'), 
-   *                                          1 => array('B','Z')),
-   *                            'Y' => array( 0 => array('B','0') )
+   *        cumulative=1 -> return items= 
+   *                        array('X' => array( 0 => array('A','C'), 1 => array('B','Z')),
+   *                              'Y' => array( 0 => array('B','0')I )
    *
    * @param integer $limit (optional) number of rows
    *
@@ -818,19 +814,28 @@ class database {
   {
     $items = null;
     $result = $this->exec_query($sql,$limit);
-    if ($result) {
-      while($row = $this->fetch_array($result)) {
-        if($cumulative) {
+    if ($result)
+    {
+      while($row = $this->fetch_array($result))
+      {
+        if($cumulative)
+        {
           $items[$row[$main_key]][$row[$sec_key]][] = $row;
-        } else if($col2implode !='') {
-          if(isset($items[$row[$main_key]][$row[$sec_key]])) {
+        }
+        else if($col2implode !='')
+        {
+          if(isset($items[$row[$main_key]][$row[$sec_key]]))
+          {
             $items[$row[$main_key]][$row[$sec_key]][$col2implode] .= 
               ',' . $row[$col2implode];
-          } else {
+          } 
+          else
+          {
             $items[$row[$main_key]][$row[$sec_key]] = $row;   
           } 
         }  
-        else {
+        else
+        {
           $items[$row[$main_key]][$row[$sec_key]] = $row;
         } 
       }
@@ -883,35 +888,6 @@ class database {
     return $nullValue;
   }
 
-  /**
-   * Fetches all rows into a map of 2 levels
-   *
-   * @param string $sql the query to be executed
-   * @param array $keyCols, columns to used as access key
-   * @param boolean $cumulative
-   * @param integer $limit (optional) number of rows
-   * 
-   * @return array $items[$row[$column_main_key]][$row[$column_sec_key]]
-   * 
-   **/
-  function fetchRowsIntoMap2l($sql,$keyCols,$cumulative = 0,$limit = -1) {
-    $items = null;
-    $result = $this->exec_query($sql,$limit);
-    
-    // new dBug($result);
-    if ($result) {
-      while($row = $this->fetch_array($result)) {
-        if($cumulative) {
-          $items[$row[$keyCols[0]]][$row[$keyCols[1]]][] = $row;
-        } else {
-          $items[$row[$keyCols[0]]][$row[$keyCols[1]]] = $row;
-        } 
-      }
-    }
-
-    unset($result);
-    return $items;
-  }
 
   /**
    * Fetches all rows into a map of 3 levels
@@ -924,16 +900,22 @@ class database {
    * @return array $items[$row[$column_main_key]][$row[$column_sec_key]]
    * 
    **/
-  function fetchRowsIntoMap3l($sql,$keyCols,$cumulative = 0,$limit = -1) {
+  function fetchRowsIntoMap3l($sql,$keyCols,$cumulative = 0,$limit = -1)
+  {
     $items = null;
     $result = $this->exec_query($sql,$limit);
     
     // new dBug($result);
-    if ($result) {
-      while($row = $this->fetch_array($result)) {
-        if($cumulative) {
+    if ($result)
+    {
+      while($row = $this->fetch_array($result))
+      {
+        if($cumulative)
+        {
           $items[$row[$keyCols[0]]][$row[$keyCols[1]]][$row[$keyCols[2]]][] = $row;
-        } else {
+        }
+        else
+        {
           $items[$row[$keyCols[0]]][$row[$keyCols[1]]][$row[$keyCols[2]]] = $row;
         } 
       }
@@ -945,7 +927,7 @@ class database {
 
 
   /**
-   * Fetches all rows into a map of 4 levels
+   * Fetches all rows into a map of 3 levels
    *
    * @param string $sql the query to be executed
    * @param array $keyCols, columns to used as access key
@@ -1038,12 +1020,16 @@ class database {
   /**
    * @used-by testplan.class.php
    */
-  function fetchMapRowsIntoMapStackOnCol($sql,$column_main_key,$column_sec_key,$stackOnCol) {
+  function fetchMapRowsIntoMapStackOnCol($sql,$column_main_key,$column_sec_key,$stackOnCol)
+  {
     $items = null;
     $result = $this->exec_query($sql);
-    if ($result) {
-      while($row = $this->fetch_array($result)) {
-        if( !isset($items[$row[$column_main_key]][$row[$column_sec_key]]) ) {
+    if ($result)
+    {
+      while($row = $this->fetch_array($result))
+      {
+        if( !isset($items[$row[$column_main_key]][$row[$column_sec_key]]) )
+        {
           $items[$row[$column_main_key]][$row[$column_sec_key]] = $row;
           $items[$row[$column_main_key]][$row[$column_sec_key]][$stackOnCol] = array();
         }

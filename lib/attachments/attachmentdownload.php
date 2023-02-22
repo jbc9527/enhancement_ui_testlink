@@ -103,14 +103,7 @@ if ($args->id)
         header('Content-Length: '.$attachmentInfo['file_size']);
         header("Content-Disposition: inline; filename=\"{$attachmentInfo['file_name']}\"");
         header("Content-Description: Download Data");
-        global $g_repositoryType;
-        if($g_repositoryType == TL_REPOSITORY_TYPE_DB)
-        {
-          echo base64_decode($content);
-        }
-        else {
-          echo $content;
-        }
+        echo $content;
         exit();
       }      
     }  

@@ -565,9 +565,7 @@ function init_args(&$tproject_mgr, &$tplan_mgr, &$req_cfg)
   $platform = 0;
   $gui_open = config_get('gui_separator_open');
   $gui_close = config_get('gui_separator_close');
-
-  $optLTT = null;
-  $dummy = $tplan_mgr->platform_mgr->getLinkedToTestplanAsMap($args->tplan_id,$optLTT);
+  $dummy = $tplan_mgr->platform_mgr->getLinkedToTestplanAsMap($args->tplan_id);
   $args->platformSet = $dummy ? array(0 => $gui_open . lang_get('any') . $gui_close) + $dummy : null;
   
   if (isset($_REQUEST['platform'])) 

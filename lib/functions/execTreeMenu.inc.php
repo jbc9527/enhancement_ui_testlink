@@ -11,7 +11,7 @@
  * @filesource  execTreeMenu.inc.php
  * @package     TestLink
  * @author      Francisco Mancardi
- * @copyright   2013,2019 TestLink community 
+ * @copyright   2013,2017 TestLink community 
  * @link        http://testlink.sourceforge.net/ 
  * @uses        config.inc.php
  * @uses        const.inc.php
@@ -46,15 +46,20 @@ function execTree(&$dbHandler,&$menuUrl,$context,$objFilters,$objOptions)
   $testCaseQty=0;
   $testCaseSet=null;
 
+  // Seems to be useless 
+  /*
+  $keyword_id = 0;
+  $keywordsFilterType = 'Or';
+  if (property_exists($objFilters, 'filter_keywords') && !is_null($objFilters->filter_keywords)) 
+  {
+    $keyword_id = $objFilters->filter_keywords;
+    $keywordsFilterType = $objFilters->filter_keywords_filter_type;
+  }
+  */
+  // ---
+
   $renderTreeNodeOpt = array();
   $renderTreeNodeOpt['showTestCaseID'] = config_get('treemenu_show_testcase_id');
-
-  $renderTreeNodeOpt['alertOnTestSuiteTCQty'] = 0;
-  if(property_exists($objOptions, 'alertOnTestSuiteTCQty')) {
-    $renderTreeNodeOpt['alertOnTestSuiteTCQty'] = $objOptions->alertOnTestSuiteTCQty;
-  }
-
-
   list($filters,$options,
        $renderTreeNodeOpt['showTestSuiteContents'],
        $renderTreeNodeOpt['useCounters'],
@@ -137,19 +142,7 @@ function execTree(&$dbHandler,&$menuUrl,$context,$objFilters,$objOptions)
       // WE NEED TO ADD FILTERING on CUSTOM FIELD VALUES, WE HAVE NOT REFACTORED
       // THIS YET.
       //
-      // 2019 - here I need to do changes!!!
-      //$sql2do = 
-      //$tplan_mgr->getLinkedForExecTree($context['tplan_id'],$filters,$options);
-      $applyTCCAlgo = false;
-
-      $tcc = null;
       if( !is_null($sql2do = $tplan_mgr->getLinkedForExecTree($context['tplan_id'],$filters,$options)) ) {
-
-        $applyTCCAlgo = 
-          ($objOptions->exec_tree_counters_logic == USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS || 
-           $objOptions->exec_tree_counters_logic == 
-            USE_LATEST_EXEC_ON_TESTPLAN_PLAT_FOR_COUNTERS ) ;
-
         $kmethod = "fetchRowsIntoMap";
         if( is_array($sql2do) ) {       
           if( $filters['keyword_filter_type'] == 'And' ) { 
@@ -167,29 +160,6 @@ function execTree(&$dbHandler,&$menuUrl,$context,$objFilters,$objOptions)
         }
         $tplan_tcases = $dbHandler->$kmethod($sql2run,'tcase_id');
       }
-
-      if( $applyTCCAlgo ) {
-
-        // But what algo?
-        switch ($objOptions->exec_tree_counters_logic) {
-          case USE_LATEST_EXEC_ON_TESTPLAN_FOR_COUNTERS:
-            $n3 = 
-              $tplan_mgr->getLinkedForExecTreeCross($context['tplan_id'],
-                             $filters,$options);
-          break;
-          
-          case USE_LATEST_EXEC_ON_TESTPLAN_PLAT_FOR_COUNTERS:
-            $n3 = 
-              $tplan_mgr->getLinkedForExecTreeIVU($context['tplan_id'],
-                             $filters,$options);
-          break;
-        }
-        $ssx = $n3['exec'];
-        if( is_array($n3) ) {
-           $ssx .= ' UNION ' . $n3['not_run'];
-        }
-        $tcc = $dbHandler->fetchRowsIntoMap($ssx,'tcase_id');
-      }
     }   
 
     if( $filters['keyword_filter_type'] == 'And' && !is_null($tplan_tcases)) {
@@ -205,6 +175,7 @@ function execTree(&$dbHandler,&$menuUrl,$context,$objFilters,$objOptions)
       $tplan_tcases = $mx;
     } 
     $setTestCaseStatus = $tplan_tcases;
+
 
     if( !is_null($tplan_tcases) ) {
       // OK, now we need to work on status filters
@@ -225,24 +196,12 @@ function execTree(&$dbHandler,&$menuUrl,$context,$objFilters,$objOptions)
         }  
       }
 
-      if( null !== $tcc && count($tcc) > 0 ) {
-        $tcIDSet = array_keys($tplan_tcases);
-        foreach($tcIDSet as $iID) {
-          if( isset($tcc[$iID]) ) {
-            $tplan_tcases[$iID]['exec_status'] = 
-             $tcc[$iID]['exec_status'];
-          }
-        }
-      }
-
-
       // ATTENTION: sometimes we use $my['options'], other $options
       $pnOptions = array('hideTestCases' => $options['hideTestCases'], 'viewType' => 'executionTree');
       $pnFilters = null;    
       $testcase_counters = prepareExecTreeNode($dbHandler,$test_spec,
                              $map_node_tccount,$tplan_tcases,$pnFilters,$pnOptions);
 
-      /*2019*/
       foreach($testcase_counters as $key => $value) {
         $test_spec[$key] = $testcase_counters[$key];
       }
@@ -409,14 +368,17 @@ function initExecTree($filtersObj,$optionsObj) {
  * planTCNavigator.php
  *
  */
-function prepareExecTreeNode(&$db,&$node,&$map_node_tccount,
-  &$tplan_tcases = null,$filters=null, $options=null) {
+function prepareExecTreeNode(&$db,&$node,&$map_node_tccount,&$tplan_tcases = null,
+                             $filters=null, $options=null)
+{
   
   static $status_descr_list;
   static $debugMsg;
   static $my;
   static $resultsCfg;
 
+  //debug_print_backtrace();
+  //echo __FUNCTION__; die();
   $tpNode = null;
   if (!$debugMsg) {
     $debugMsg = 'Class: ' . __CLASS__ . ' - ' . 'Method: ' . __FUNCTION__ . ' - ';
@@ -524,28 +486,24 @@ function prepareExecTreeNode(&$db,&$node,&$map_node_tccount,
           continue;
         }
         
-        $counters_map = 
-          prepareExecTreeNode($db,$current,$map_node_tccount,$tplan_tcases,$my['filters'],$my['options']);
-       
-        /* 2019
-        */
+        $counters_map = prepareExecTreeNode($db,$current,$map_node_tccount,$tplan_tcases,
+                                            $my['filters'],$my['options']);
         foreach($counters_map as $key => $value)
         {
           $tcase_counters[$key] += $counters_map[$key];   
         }  
       }
 
-      /* 2019
-      */
-      foreach($tcase_counters as $key => $value) {
+      foreach($tcase_counters as $key => $value)
+      {
         $node[$key] = $tcase_counters[$key];
       }  
-
+      
       // hhhm is this test needed ? Why ?
-      if (isset($node['id'])) {
-        $map_node_tccount[$node['id']] = 
-          array( 'testcount' => $node['testcase_count'],
-                 'name' => $node['name']);
+      if (isset($node['id']))
+      {
+        $map_node_tccount[$node['id']] = array( 'testcount' => $node['testcase_count'],
+                                                'name' => $node['name']);
       }
 
       // need to check is this check can be TRUE on some situation
@@ -565,12 +523,14 @@ function prepareExecTreeNode(&$db,&$node,&$map_node_tccount,
         $node = REMOVEME;
       }
     }
-    else if ($node_type == 'testsuite') {
+    else if ($node_type == 'testsuite')
+    {
       // Empty test suite
       $map_node_tccount[$node['id']] = array( 'testcount' => 0,'name' => $node['name']);
       
       // If is an EMPTY Test suite and we have added filtering conditions, We will destroy it.
-      if ($filtersApplied || !is_null($tplan_tcases) ) {
+      if ($filtersApplied || !is_null($tplan_tcases) )
+      {
         // $node = null;
         $node = REMOVEME;
       } 
@@ -650,13 +610,6 @@ function testPlanTree(&$dbHandler,&$menuUrl,$tproject_id,$tproject_name,$tplan_i
 
   $renderTreeNodeOpt = null;
   $renderTreeNodeOpt['showTestCaseID'] = config_get('treemenu_show_testcase_id');
-
- $renderTreeNodeOpt['alertOnTestSuiteTCQty'] = 0;
-  if(property_exists($objOptions, 'alertOnTestSuiteTCQty')) {
-    $renderTreeNodeOpt['alertOnTestSuiteTCQty'] = $objOptions->alertOnTestSuiteTCQty;
-  }
-
-
 
   list($filters,$options,
        $renderTreeNodeOpt['showTestSuiteContents'],
@@ -819,18 +772,11 @@ function testPlanTree(&$dbHandler,&$menuUrl,$tproject_id,$tproject_name,$tplan_i
     // here we have LOT OF CONFUSION, sometimes we use $my['options'] other $options
     $pnFilters = null;    
     $pnOptions = array('hideTestCases' => $my['options']['hideTestCases'], 'viewType' => 'executionTree');
-
-    if( property_exists($objOptions, 'alertOnTestSuiteTCQty') ) {
-      $pnOptions['alertOnTestSuiteTCQty'] = $objOptions->alertOnTestSuiteTCQty;
-    }
-
-
-    
     $testcase_counters = prepareExecTreeNode($dbHandler,$test_spec,$map_node_tccount,
                                              $tplan_tcases,$pnFilters,$pnOptions);
 
-    /* 2019 */
-    foreach($testcase_counters as $key => $value) {
+    foreach($testcase_counters as $key => $value)
+    {
       $test_spec[$key] = $testcase_counters[$key];
     }
   
